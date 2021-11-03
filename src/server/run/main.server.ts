@@ -4,6 +4,8 @@ import { PlayerState } from "shared/entities/player-state"
 import { Database } from "../modules/helpers/database"
 import { APIResult } from "shared/api/api-result"
 import { APIArgs } from "shared/api/api-args"
+import { PlayerSettings } from "shared/entities/player-settings"
+import { PlayerKeySettings } from "shared/entities/player-key-settings"
 
 const playerDirectory = new Instance("Folder", game.GetService("ReplicatedStorage"))
 playerDirectory.Name = "player"
@@ -61,7 +63,13 @@ apiHandler.OnServerInvoke = function(user, _upperServiceName, _lowerServiceName,
                 player = player ?? database.GetAsync(tostring(user.UserId)) as PlayerState
                 plrs.push(player)
             }
-            player = player ?? new PlayerState(user.UserId, 500, new PlayerCard(0, "new"))
+            player = player ?? new PlayerState(
+                user.UserId, 
+                500,
+                new PlayerCard(0, "new"), 
+                new PlayerSettings(
+                    new PlayerKeySettings(Enum.KeyCode.E, Enum.KeyCode.G)
+                ))
             let apiArgs = new APIArgs(player, clientsArgs)
             let result = currentTarget.Invoke(apiArgs)
             for(let i = 0; i < plrs.size(); i++)

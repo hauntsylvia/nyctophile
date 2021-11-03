@@ -5,6 +5,7 @@ import { Client } from "./modules/net/lib";
 const lib = new Client()
 let draws = new Array<Draw>()
 let plr = game.GetService("Players").LocalPlayer
+let me = lib.GetMe()
 
 let runService = game.GetService("RunService")
 let userInputService = game.GetService("UserInputService")
@@ -68,7 +69,7 @@ runService.Heartbeat.Connect(function(deltaTime)
 })
 userInputService.InputEnded.Connect(function(inputObject, isProcessed)
 {
-    if(!isProcessed)
+    if(!isProcessed && me?.playerSettings.playerKeys.interactKey && closestDraw !== undefined && closestDraw.IsInRange(plr))
     {
         
     }

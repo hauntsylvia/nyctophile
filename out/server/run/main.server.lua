@@ -5,6 +5,8 @@ local PlayerState = TS.import(script, game:GetService("ReplicatedStorage"), "TS"
 local Database = TS.import(script, game:GetService("ServerScriptService"), "TS", "modules", "helpers", "database").Database
 local APIResult = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "api", "api-result").APIResult
 local APIArgs = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "api", "api-args").APIArgs
+local PlayerSettings = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "player-settings").PlayerSettings
+local PlayerKeySettings = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "player-key-settings").PlayerKeySettings
 local playerDirectory = Instance.new("Folder", game:GetService("ReplicatedStorage"))
 playerDirectory.Name = "player"
 local apiDirectory = Instance.new("Folder", game:GetService("ReplicatedStorage"))
@@ -91,7 +93,7 @@ apiHandler.OnServerInvoke = function(user, _upperServiceName, _lowerServiceName,
 			end
 			local _condition = player
 			if _condition == nil then
-				_condition = PlayerState.new(user.UserId, 500, PlayerCard.new(0, "new"))
+				_condition = PlayerState.new(user.UserId, 500, PlayerCard.new(0, "new"), PlayerSettings.new(PlayerKeySettings.new(Enum.KeyCode.E, Enum.KeyCode.G)))
 			end
 			player = _condition
 			local apiArgs = APIArgs.new(player, clientsArgs)

@@ -5,6 +5,7 @@ local Client = TS.import(script, script.Parent, "modules", "net", "lib").Client
 local lib = Client.new()
 local draws = {}
 local plr = game:GetService("Players").LocalPlayer
+local me = lib:GetMe()
 local runService = game:GetService("RunService")
 local userInputService = game:GetService("UserInputService")
 local function EvaluateInteractables()
@@ -89,7 +90,18 @@ runService.Heartbeat:Connect(function(deltaTime)
 	end
 end)
 userInputService.InputEnded:Connect(function(inputObject, isProcessed)
-	if not isProcessed then
+	local _condition = not isProcessed
+	if _condition then
+		local _result = me
+		if _result ~= nil then
+			_result = _result.playerSettings.playerKeys.interactKey
+		end
+		_condition = _result
+		if _condition then
+			_condition = closestDraw ~= nil and closestDraw:IsInRange(plr)
+		end
+	end
+	if _condition then
 	end
 end)
 while { wait(5) } do
