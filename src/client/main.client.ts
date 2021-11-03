@@ -5,6 +5,10 @@ import { Client } from "./modules/net/lib";
 const lib = new Client()
 let draws = new Array<Draw>()
 let plr = game.GetService("Players").LocalPlayer
+
+let runService = game.GetService("RunService")
+let userInputService = game.GetService("UserInputService")
+
 function EvaluateInteractables()
 {
     let ints = lib.GetInteractables()
@@ -33,7 +37,7 @@ function EvaluateInteractables()
     }
 }
 let closestDraw: Draw | undefined = undefined
-game.GetService("RunService").Heartbeat.Connect(function(deltaTime)
+runService.Heartbeat.Connect(function(deltaTime)
 {
     if(draws.size() > 0)
     {
@@ -60,6 +64,13 @@ game.GetService("RunService").Heartbeat.Connect(function(deltaTime)
         {
             closestDraw.Enable(true)
         }
+    }
+})
+userInputService.InputEnded.Connect(function(inputObject, isProcessed)
+{
+    if(!isProcessed)
+    {
+        
     }
 })
 while(wait(5))

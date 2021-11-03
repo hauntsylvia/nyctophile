@@ -17,4 +17,4 @@ class Interactable
         return this.attachedPlayerUserId <= 0
     }
 }
-export {Interactable}
+export { Interactable }

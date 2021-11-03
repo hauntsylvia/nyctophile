@@ -9,4 +9,4 @@ class PlayerCard
     assetId: number
     phrase: string
 }
-export {PlayerCard}
+export { PlayerCard }

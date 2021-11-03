@@ -53,7 +53,6 @@ class Draw
             this.event.Disconnect()
         }
     }
-    
     GetDistanceFromPlayer(player: Player)
     {
         return ((((player.Character || player.CharacterAdded.Wait()) as Model).FindFirstChild("HumanoidRootPart") as Part).Position.sub(this.int.attachedPart.Position)).Magnitude

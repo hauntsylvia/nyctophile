@@ -5,6 +5,8 @@ local Client = TS.import(script, script.Parent, "modules", "net", "lib").Client
 local lib = Client.new()
 local draws = {}
 local plr = game:GetService("Players").LocalPlayer
+local runService = game:GetService("RunService")
+local userInputService = game:GetService("UserInputService")
 local function EvaluateInteractables()
 	local ints = lib:GetInteractables()
 	if ints ~= nil then
@@ -53,7 +55,7 @@ local function EvaluateInteractables()
 	end
 end
 local closestDraw = nil
-game:GetService("RunService").Heartbeat:Connect(function(deltaTime)
+runService.Heartbeat:Connect(function(deltaTime)
 	if #draws > 0 then
 		do
 			local i = 0
@@ -84,6 +86,10 @@ game:GetService("RunService").Heartbeat:Connect(function(deltaTime)
 		if closestDraw ~= nil and not closestDraw.isEnabled then
 			closestDraw:Enable(true)
 		end
+	end
+end)
+userInputService.InputEnded:Connect(function(inputObject, isProcessed)
+	if not isProcessed then
 	end
 end)
 while { wait(5) } do
