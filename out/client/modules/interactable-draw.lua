@@ -23,10 +23,9 @@ do
 		self.attached.Material = Enum.Material.Neon
 		self.attached.Color = Color3.fromRGB(255, 255, 255)
 	end
-	function Draw:Enable(closeWhenOutOfRange)
+	function Draw:Enable(closeWhenOutOfRange, plr)
 		self.isEnabled = true
 		local t = self
-		local plr = game:GetService("Players").LocalPlayer
 		local _condition = plr.Character
 		if _condition == nil then
 			_condition = { plr.CharacterAdded:Wait() }
@@ -71,6 +70,9 @@ do
 	function Draw:IsInRange(player)
 		local distance = self:GetDistanceFromPlayer(player)
 		return distance <= self.int.config.range
+	end
+	function Draw:Interact()
+		self.int.remote:InvokeServer()
 	end
 end
 return {

@@ -63,17 +63,18 @@ runService.Heartbeat.Connect(function(deltaTime)
         }
         if(closestDraw !== undefined && !closestDraw.isEnabled)
         {
-            closestDraw.Enable(true)
+            closestDraw.Enable(true, plr)
         }
     }
 })
 userInputService.InputEnded.Connect(function(inputObject, isProcessed)
 {
-    if(!isProcessed && me?.playerSettings.playerKeys.interactKey && closestDraw !== undefined && closestDraw.IsInRange(plr))
+    if(!isProcessed && me?.playerSettings.playerKeys.interactKey === inputObject.KeyCode.Name && closestDraw !== undefined && closestDraw.IsInRange(plr))
     {
-        
+        closestDraw.Interact()
     }
 })
+EvaluateInteractables()
 while(wait(5))
 {
     EvaluateInteractables()

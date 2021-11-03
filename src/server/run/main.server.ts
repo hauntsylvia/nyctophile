@@ -14,8 +14,7 @@ const apiDirectory = new Instance("Folder", game.GetService("ReplicatedStorage")
 apiDirectory.Name = "api"
 const apiHandler = new Instance("RemoteFunction", apiDirectory)
 apiHandler.Name = "func"
-const databaseStructure = new Database()
-const plrs = new Array<PlayerState>()
+const database = new Database()
 
 const internalAPIDirectory = new Instance("Folder", game.GetService("ServerStorage"))
 internalAPIDirectory.Name = "api"
@@ -48,38 +47,8 @@ apiHandler.OnServerInvoke = function(user, _upperServiceName, _lowerServiceName,
         let currentTarget = GetEquatingBindableFunction(upperServiceName, lowerServiceName)
         if(currentTarget !== undefined)
         {
-            let database = databaseStructure.database
-            let player
-            for(let i = 0; i < plrs.size(); i++)
-            {
-                if(plrs[i].userId === user.UserId)
-                {
-                    player = plrs[i]
-                    break
-                }
-            }
-            if(player === undefined)
-            {
-                player = player ?? database.GetAsync(tostring(user.UserId)) as PlayerState
-                plrs.push(player)
-            }
-            player = player ?? new PlayerState(
-                user.UserId, 
-                500,
-                new PlayerCard(0, "new"), 
-                new PlayerSettings(
-                    new PlayerKeySettings(Enum.KeyCode.E, Enum.KeyCode.G)
-                ))
-            let apiArgs = new APIArgs(player, clientsArgs)
+            let apiArgs = new APIArgs(database.GetPlayerState(user), clientsArgs)
             let result = currentTarget.Invoke(apiArgs)
-            for(let i = 0; i < plrs.size(); i++)
-            {
-                if(plrs[i].userId === player.userId)
-                {
-                    plrs[i] = player
-                    break
-                }
-            }
             return result
         }
         else
@@ -95,13 +64,6 @@ apiHandler.OnServerInvoke = function(user, _upperServiceName, _lowerServiceName,
 
 game.GetService("Players").PlayerRemoving.Connect(function(user)
 {
-    let database = databaseStructure.database
-    for(let i = 0; i < plrs.size(); i++)
-    {
-        if(plrs[i].userId === user.UserId)
-        {
-            database.SetAsync(tostring(user.UserId), plrs[i])
-            break
-        }
-    }
+    print((database.GetPlayerState(user).playerSettings.playerKeys.interactKey))
+    database.SavePlayerState(database.GetPlayerState(user))
 })

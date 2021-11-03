@@ -1,4 +1,6 @@
+import { APIResult } from "shared/api/api-result";
 import { Interactable } from "shared/entities/interactable";
+import { Client } from "./net/lib";
 
 const tweenService = game.GetService("TweenService")
 
@@ -6,7 +8,7 @@ class Draw
 {
     isEnabled: boolean
     int: Interactable
-    private attached: Part
+    attached: Part
     constructor(int: Interactable)
     {
         this.isEnabled = false
@@ -20,11 +22,10 @@ class Draw
         this.attached.Color = Color3.fromRGB(255, 255, 255)
     }
     event: RBXScriptConnection | undefined
-    Enable(closeWhenOutOfRange: boolean)
+    Enable(closeWhenOutOfRange: boolean, plr: Player)
     {
         this.isEnabled = true
         let t = this
-        let plr = game.GetService("Players").LocalPlayer
         let char = (plr.Character ?? plr.CharacterAdded.Wait()) as Model
         let root = char.FindFirstChild("HumanoidRootPart") as Part
         let p = this.int
@@ -61,6 +62,10 @@ class Draw
     {
         let distance = this.GetDistanceFromPlayer(player)
         return distance <= this.int.config.range
+    }
+    Interact()
+    {
+        this.int.remote.InvokeServer()
     }
 }
 

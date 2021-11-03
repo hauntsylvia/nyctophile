@@ -3,18 +3,17 @@ import { PlayerState } from "./player-state"
 
 class Interactable
 {
-    attachedPart: Part
+    attachedPart: BasePart
     attachedPlayerUserId: number
     config: InteractableConfig
-    constructor(attachedPart: Part, attachedPlayerUserId: number, config: InteractableConfig) 
+    
+    remote: RemoteFunction
+    constructor(attachedPart: BasePart, attachedPlayerUserId: number, config: InteractableConfig, remote: RemoteFunction) 
     { 
         this.attachedPart = attachedPart
         this.attachedPlayerUserId = attachedPlayerUserId
         this.config = config
-    }  
-    IsRegisteredToAllPlayers()
-    {
-        return this.attachedPlayerUserId <= 0
+        this.remote = remote
     }
 }
 export { Interactable }

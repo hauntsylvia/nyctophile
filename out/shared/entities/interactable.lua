@@ -11,13 +11,11 @@ do
 		local self = setmetatable({}, Interactable)
 		return self:constructor(...) or self
 	end
-	function Interactable:constructor(attachedPart, attachedPlayerUserId, config)
+	function Interactable:constructor(attachedPart, attachedPlayerUserId, config, remote)
 		self.attachedPart = attachedPart
 		self.attachedPlayerUserId = attachedPlayerUserId
 		self.config = config
-	end
-	function Interactable:IsRegisteredToAllPlayers()
-		return self.attachedPlayerUserId <= 0
+		self.remote = remote
 	end
 end
 return {

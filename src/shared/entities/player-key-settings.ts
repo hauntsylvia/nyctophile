@@ -1,9 +1,9 @@
 
 class PlayerKeySettings
 {
-    interactKey: Enum.KeyCode
-    inventoryKey: Enum.KeyCode
-    constructor(interactKey: Enum.KeyCode, inventoryKey: Enum.KeyCode) 
+    interactKey: string
+    inventoryKey: string
+    constructor(interactKey: string, inventoryKey: string) 
     { 
         this.interactKey = interactKey
         this.inventoryKey = inventoryKey

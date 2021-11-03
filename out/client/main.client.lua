@@ -85,7 +85,7 @@ runService.Heartbeat:Connect(function(deltaTime)
 			end
 		end
 		if closestDraw ~= nil and not closestDraw.isEnabled then
-			closestDraw:Enable(true)
+			closestDraw:Enable(true, plr)
 		end
 	end
 end)
@@ -96,14 +96,16 @@ userInputService.InputEnded:Connect(function(inputObject, isProcessed)
 		if _result ~= nil then
 			_result = _result.playerSettings.playerKeys.interactKey
 		end
-		_condition = _result
+		_condition = _result == inputObject.KeyCode.Name
 		if _condition then
 			_condition = closestDraw ~= nil and closestDraw:IsInRange(plr)
 		end
 	end
 	if _condition then
+		closestDraw:Interact()
 	end
 end)
+EvaluateInteractables()
 while { wait(5) } do
 	EvaluateInteractables()
 end
