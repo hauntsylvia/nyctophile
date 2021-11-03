@@ -39,42 +39,49 @@ function GetEquatingBindableFunction(upper: string, lower: string)
 
 apiHandler.OnServerInvoke = function(user, _upperServiceName, _lowerServiceName, clientsArgs)
 {
-    let upperServiceName = _upperServiceName as string
-    let lowerServiceName = _lowerServiceName as string
-    let currentTarget = GetEquatingBindableFunction(upperServiceName, lowerServiceName)
-    if(currentTarget !== undefined)
+    try
     {
-        let database = databaseStructure.database
-        let player
-        for(let i = 0; i < plrs.size(); i++)
+        let upperServiceName = _upperServiceName as string
+        let lowerServiceName = _lowerServiceName as string
+        let currentTarget = GetEquatingBindableFunction(upperServiceName, lowerServiceName)
+        if(currentTarget !== undefined)
         {
-            if(plrs[i].userId === user.UserId)
+            let database = databaseStructure.database
+            let player
+            for(let i = 0; i < plrs.size(); i++)
             {
-                player = plrs[i]
-                break
+                if(plrs[i].userId === user.UserId)
+                {
+                    player = plrs[i]
+                    break
+                }
             }
-        }
-        if(player === undefined)
-        {
-            player = player ?? database.GetAsync(tostring(user.UserId)) as PlayerState
-            plrs.push(player)
-        }
-        player = player ?? new PlayerState(user.UserId, 500, new PlayerCard(0, "new"))
-        let apiArgs = new APIArgs(player, clientsArgs)
-        let result = currentTarget.Invoke(apiArgs)
-        for(let i = 0; i < plrs.size(); i++)
-        {
-            if(plrs[i].userId === player.userId)
+            if(player === undefined)
             {
-                plrs[i] = player
-                break
+                player = player ?? database.GetAsync(tostring(user.UserId)) as PlayerState
+                plrs.push(player)
             }
+            player = player ?? new PlayerState(user.UserId, 500, new PlayerCard(0, "new"))
+            let apiArgs = new APIArgs(player, clientsArgs)
+            let result = currentTarget.Invoke(apiArgs)
+            for(let i = 0; i < plrs.size(); i++)
+            {
+                if(plrs[i].userId === player.userId)
+                {
+                    plrs[i] = player
+                    break
+                }
+            }
+            return result
         }
-        return result
+        else
+        {
+            return new APIResult<unknown>(undefined, "Service not found.")
+        }
     }
-    else
+    catch
     {
-        return new APIResult<unknown>(undefined, "Service not found.")
+        return new APIResult<unknown>(undefined, "Malformed client data or internal server failure.")
     }
 }
 

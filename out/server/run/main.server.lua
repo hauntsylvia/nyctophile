@@ -53,69 +53,76 @@ local function GetEquatingBindableFunction(upper, lower)
 	end
 end
 apiHandler.OnServerInvoke = function(user, _upperServiceName, _lowerServiceName, clientsArgs)
-	local upperServiceName = _upperServiceName
-	local lowerServiceName = _lowerServiceName
-	local currentTarget = GetEquatingBindableFunction(upperServiceName, lowerServiceName)
-	if currentTarget ~= nil then
-		local database = databaseStructure.database
-		local player
-		do
-			local i = 0
-			local _shouldIncrement = false
-			while true do
-				if _shouldIncrement then
-					i += 1
-				else
-					_shouldIncrement = true
-				end
-				if not (i < #plrs) then
-					break
-				end
-				if plrs[i + 1].userId == user.UserId then
-					player = plrs[i + 1]
-					break
+	local _exitType, _returns = TS.try(function()
+		local upperServiceName = _upperServiceName
+		local lowerServiceName = _lowerServiceName
+		local currentTarget = GetEquatingBindableFunction(upperServiceName, lowerServiceName)
+		if currentTarget ~= nil then
+			local database = databaseStructure.database
+			local player
+			do
+				local i = 0
+				local _shouldIncrement = false
+				while true do
+					if _shouldIncrement then
+						i += 1
+					else
+						_shouldIncrement = true
+					end
+					if not (i < #plrs) then
+						break
+					end
+					if plrs[i + 1].userId == user.UserId then
+						player = plrs[i + 1]
+						break
+					end
 				end
 			end
-		end
-		if player == nil then
+			if player == nil then
+				local _condition = player
+				if _condition == nil then
+					_condition = database:GetAsync(tostring(user.UserId))
+				end
+				player = _condition
+				local _player = player
+				-- ▼ Array.push ▼
+				plrs[#plrs + 1] = _player
+				-- ▲ Array.push ▲
+			end
 			local _condition = player
 			if _condition == nil then
-				_condition = database:GetAsync(tostring(user.UserId))
+				_condition = PlayerState.new(user.UserId, 500, PlayerCard.new(0, "new"))
 			end
 			player = _condition
-			local _player = player
-			-- ▼ Array.push ▼
-			plrs[#plrs + 1] = _player
-			-- ▲ Array.push ▲
-		end
-		local _condition = player
-		if _condition == nil then
-			_condition = PlayerState.new(user.UserId, 500, PlayerCard.new(0, "new"))
-		end
-		player = _condition
-		local apiArgs = APIArgs.new(player, clientsArgs)
-		local result = currentTarget:Invoke(apiArgs)
-		do
-			local i = 0
-			local _shouldIncrement = false
-			while true do
-				if _shouldIncrement then
-					i += 1
-				else
-					_shouldIncrement = true
-				end
-				if not (i < #plrs) then
-					break
-				end
-				if plrs[i + 1].userId == player.userId then
-					plrs[i + 1] = player
-					break
+			local apiArgs = APIArgs.new(player, clientsArgs)
+			local result = currentTarget:Invoke(apiArgs)
+			do
+				local i = 0
+				local _shouldIncrement = false
+				while true do
+					if _shouldIncrement then
+						i += 1
+					else
+						_shouldIncrement = true
+					end
+					if not (i < #plrs) then
+						break
+					end
+					if plrs[i + 1].userId == player.userId then
+						plrs[i + 1] = player
+						break
+					end
 				end
 			end
+			return TS.TRY_RETURN, { result }
+		else
+			return TS.TRY_RETURN, { APIResult.new(nil, "Service not found.") }
 		end
-		return result
-	else
-		return APIResult.new(nil, "Service not found.")
+	end, function()
+		return TS.TRY_RETURN, { APIResult.new(nil, "Malformed client data or internal server failure.") }
+	end)
+	if _exitType then
+		return unpack(_returns)
 	end
 end
 game:GetService("Players").PlayerRemoving:Connect(function(user)
