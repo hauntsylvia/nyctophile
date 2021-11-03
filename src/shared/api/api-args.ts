@@ -1,4 +1,4 @@
-import { PlayerState } from "shared/entities/playerState"
+import { PlayerState } from "shared/entities/player-state"
 class APIArgs
 {
     constructor(caller: PlayerState, clientArgs: any) 

@@ -13,7 +13,12 @@ do
 		return self:constructor(...) or self
 	end
 	function APIRegister:constructor(service)
-		self._service = Instance.new("Folder", apiDirectory)
+		local serviceFolder = apiDirectory:FindFirstChild(service)
+		if serviceFolder ~= nil and serviceFolder:IsA("Folder") then
+			self._service = serviceFolder
+		else
+			self._service = Instance.new("Folder", apiDirectory)
+		end
 		self._service.Name = service
 	end
 	function APIRegister:RegisterNewLowerService(name)

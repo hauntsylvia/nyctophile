@@ -1,9 +1,9 @@
-import { PlayerCard } from "shared/entities/playerCard"
-import { PlayerState } from "shared/entities/playerState"
-import { Database } from "server/modules/database"
-import { APIArgs } from "shared/api/apiArgs"
-import { APIRegister } from "server/modules/api-register"
-import { APIResult } from "shared/api/apiResult"
+import { PlayerCard } from "shared/entities/player-card"
+import { PlayerState } from "shared/entities/player-state"
+import { Database } from "server/modules/helpers/database"
+import { APIArgs } from "shared/api/api-args"
+import { APIRegister } from "shared/modules/api-register"
+import { APIResult } from "shared/api/api-result"
 
 const thisService = new APIRegister("users")
 
@@ -12,5 +12,14 @@ function GetSelf(args: APIArgs)
     print("get self")
     return new APIResult<PlayerState>(args.caller, "")
 }
-thisService.RegisterNewLowerService("GetSelf").OnInvoke = GetSelf
+function GetPlayerRotations(args: APIArgs)
+{
 
+}
+function UpdatePlayerRotations(args: APIArgs)
+{
+    
+}
+
+thisService.RegisterNewLowerService("me").OnInvoke = GetSelf
+thisService.RegisterNewLowerService("getplayerrotations").OnInvoke = GetSelf

@@ -1,10 +1,12 @@
 -- Compiled with roblox-ts v1.2.7
 local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
-local PlayerCard = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "playerCard").PlayerCard
-local PlayerState = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "playerState").PlayerState
-local Database = TS.import(script, game:GetService("ServerScriptService"), "TS", "modules", "database").Database
-local APIResult = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "api", "apiResult").APIResult
-local APIArgs = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "api", "apiArgs").APIArgs
+local PlayerCard = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "player-card").PlayerCard
+local PlayerState = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "player-state").PlayerState
+local Database = TS.import(script, game:GetService("ServerScriptService"), "TS", "modules", "helpers", "database").Database
+local APIResult = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "api", "api-result").APIResult
+local APIArgs = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "api", "api-args").APIArgs
+local playerDirectory = Instance.new("Folder", game:GetService("ReplicatedStorage"))
+playerDirectory.Name = "player"
 local apiDirectory = Instance.new("Folder", game:GetService("ReplicatedStorage"))
 apiDirectory.Name = "api"
 local apiHandler = Instance.new("RemoteFunction", apiDirectory)
@@ -53,7 +55,6 @@ end
 apiHandler.OnServerInvoke = function(user, _upperServiceName, _lowerServiceName, clientsArgs)
 	local upperServiceName = _upperServiceName
 	local lowerServiceName = _lowerServiceName
-	local apiLowerServices = apiDirectory:FindFirstChild(upperServiceName)
 	local currentTarget = GetEquatingBindableFunction(upperServiceName, lowerServiceName)
 	if currentTarget ~= nil then
 		local database = databaseStructure.database
@@ -82,9 +83,10 @@ apiHandler.OnServerInvoke = function(user, _upperServiceName, _lowerServiceName,
 				_condition = database:GetAsync(tostring(user.UserId))
 			end
 			player = _condition
-			local _arg0 = #plrs
 			local _player = player
-			table.insert(plrs, _arg0 + 1, _player)
+			-- ▼ Array.push ▼
+			plrs[#plrs + 1] = _player
+			-- ▲ Array.push ▲
 		end
 		local _condition = player
 		if _condition == nil then
@@ -93,9 +95,47 @@ apiHandler.OnServerInvoke = function(user, _upperServiceName, _lowerServiceName,
 		player = _condition
 		local apiArgs = APIArgs.new(player, clientsArgs)
 		local result = currentTarget:Invoke(apiArgs)
-		database:SetAsync(tostring(user.UserId), player)
+		do
+			local i = 0
+			local _shouldIncrement = false
+			while true do
+				if _shouldIncrement then
+					i += 1
+				else
+					_shouldIncrement = true
+				end
+				if not (i < #plrs) then
+					break
+				end
+				if plrs[i + 1].userId == player.userId then
+					plrs[i + 1] = player
+					break
+				end
+			end
+		end
 		return result
 	else
 		return APIResult.new(nil, "Service not found.")
 	end
 end
+game:GetService("Players").PlayerRemoving:Connect(function(user)
+	local database = databaseStructure.database
+	do
+		local i = 0
+		local _shouldIncrement = false
+		while true do
+			if _shouldIncrement then
+				i += 1
+			else
+				_shouldIncrement = true
+			end
+			if not (i < #plrs) then
+				break
+			end
+			if plrs[i + 1].userId == user.UserId then
+				database:SetAsync(tostring(user.UserId), plrs[i + 1])
+				break
+			end
+		end
+	end
+end)

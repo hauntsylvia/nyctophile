@@ -1,9 +1,12 @@
 export { }
-import { PlayerCard } from "shared/entities/playerCard"
-import { PlayerState } from "shared/entities/playerState"
-import { Database } from "./modules/database"
-import { APIResult } from "shared/api/apiResult"
-import { APIArgs } from "shared/api/apiArgs"
+import { PlayerCard } from "shared/entities/player-card"
+import { PlayerState } from "shared/entities/player-state"
+import { Database } from "../modules/helpers/database"
+import { APIResult } from "shared/api/api-result"
+import { APIArgs } from "shared/api/api-args"
+
+const playerDirectory = new Instance("Folder", game.GetService("ReplicatedStorage"))
+playerDirectory.Name = "player"
 
 const apiDirectory = new Instance("Folder", game.GetService("ReplicatedStorage"))
 apiDirectory.Name = "api"
@@ -38,7 +41,6 @@ apiHandler.OnServerInvoke = function(user, _upperServiceName, _lowerServiceName,
 {
     let upperServiceName = _upperServiceName as string
     let lowerServiceName = _lowerServiceName as string
-    let apiLowerServices = apiDirectory.FindFirstChild(upperServiceName)
     let currentTarget = GetEquatingBindableFunction(upperServiceName, lowerServiceName)
     if(currentTarget !== undefined)
     {
@@ -55,12 +57,19 @@ apiHandler.OnServerInvoke = function(user, _upperServiceName, _lowerServiceName,
         if(player === undefined)
         {
             player = player ?? database.GetAsync(tostring(user.UserId)) as PlayerState
-            plrs.insert(plrs.size(), player)
+            plrs.push(player)
         }
         player = player ?? new PlayerState(user.UserId, 500, new PlayerCard(0, "new"))
         let apiArgs = new APIArgs(player, clientsArgs)
         let result = currentTarget.Invoke(apiArgs)
-        database.SetAsync(tostring(user.UserId), player)
+        for(let i = 0; i < plrs.size(); i++)
+        {
+            if(plrs[i].userId === player.userId)
+            {
+                plrs[i] = player
+                break
+            }
+        }
         return result
     }
     else
@@ -68,3 +77,16 @@ apiHandler.OnServerInvoke = function(user, _upperServiceName, _lowerServiceName,
         return new APIResult<unknown>(undefined, "Service not found.")
     }
 }
+
+game.GetService("Players").PlayerRemoving.Connect(function(user)
+{
+    let database = databaseStructure.database
+    for(let i = 0; i < plrs.size(); i++)
+    {
+        if(plrs[i].userId === user.UserId)
+        {
+            database.SetAsync(tostring(user.UserId), plrs[i])
+            break
+        }
+    }
+})

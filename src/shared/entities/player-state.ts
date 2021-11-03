@@ -1,4 +1,4 @@
-import {PlayerCard} from "shared/entities/playerCard"
+import { PlayerCard } from "shared/entities/player-card"
 class PlayerState
 {
     constructor(userId: number, ashlin: number, playerCard: PlayerCard) 
@@ -10,7 +10,6 @@ class PlayerState
     userId: number
     ashlin: number
     playerCard: PlayerCard
-
     GetAttachedPlayer()
     {
         return game.GetService("Players").GetPlayerByUserId(this.userId)
