@@ -13,7 +13,6 @@ let userInputService = game.GetService("UserInputService")
 function EvaluateInteractables()
 {
     let ints = lib.GetInteractables()
-    print("a")
     if(ints !== undefined)
     {
         for(let i = 0; i < ints.size(); i++)
