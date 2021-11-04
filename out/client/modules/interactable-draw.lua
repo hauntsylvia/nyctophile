@@ -35,7 +35,7 @@ do
 		local p = self.int
 		local interactPart = self.attached
 		tweenService:Create(self.attached, TweenInfo.new(0.1, Enum.EasingStyle.Linear), {
-			Transparency = 0.6,
+			Transparency = 0.9,
 		}):Play()
 		self.event = game:GetService("RunService").RenderStepped:Connect(function(step)
 			local _position = p.attachedPart.Position
@@ -63,9 +63,19 @@ do
 		end
 	end
 	function Draw:GetDistanceFromPlayer(player)
-		local _position = ((player.Character or { player.CharacterAdded:Wait() }):FindFirstChild("HumanoidRootPart")).Position
-		local _position_1 = self.int.attachedPart.Position
-		return (_position - _position_1).Magnitude
+		local _condition = player.Character
+		if _condition == nil then
+			_condition = { player.CharacterAdded:Wait() }
+		end
+		local char = _condition
+		local root = char:WaitForChild("HumanoidRootPart")
+		if self.int.attachedPart ~= nil then
+			local _position = root.Position
+			local _position_1 = self.int.attachedPart.Position
+			return (_position - _position_1).Magnitude
+		else
+			return self.int.config.range + 1
+		end
 	end
 	function Draw:IsInRange(player)
 		local distance = self:GetDistanceFromPlayer(player)

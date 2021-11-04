@@ -30,7 +30,7 @@ class Draw
         let root = char.FindFirstChild("HumanoidRootPart") as Part
         let p = this.int
         let interactPart = this.attached
-        tweenService.Create(this.attached, new TweenInfo(0.1, Enum.EasingStyle.Linear), {Transparency: 0.6}).Play()
+        tweenService.Create(this.attached, new TweenInfo(0.1, Enum.EasingStyle.Linear), {Transparency: 0.9}).Play()
         this.event = game.GetService("RunService").RenderStepped.Connect(function(step)
         {
             let v = p.attachedPart.Position.add(root.Position)
@@ -56,7 +56,16 @@ class Draw
     }
     GetDistanceFromPlayer(player: Player)
     {
-        return ((((player.Character || player.CharacterAdded.Wait()) as Model).FindFirstChild("HumanoidRootPart") as Part).Position.sub(this.int.attachedPart.Position)).Magnitude
+        let char = ( player.Character ?? player.CharacterAdded.Wait() ) as Model
+        let root = char.WaitForChild("HumanoidRootPart") as Part
+        if(this.int.attachedPart !== undefined)
+        {
+            return root.Position.sub(this.int.attachedPart.Position).Magnitude
+        }
+        else
+        {
+            return this.int.config.range + 1
+        }
     }
     IsInRange(player: Player)
     {

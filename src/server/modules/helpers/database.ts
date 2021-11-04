@@ -7,11 +7,29 @@ import { PlayerState } from "shared/entities/player/player-state"
 const players = new Array<PlayerState>()
 class Database
 {
-    constructor()
+    database: GlobalDataStore
+    cache: { [key: string]: any; }
+    constructor(newName?: string)
     {
-        let name = ("11-02-2021.A.1")
+        let name = newName ?? ("11-02-2021.A.1")
         this.database = game.GetService("DataStoreService").GetDataStore(name)
+        this.cache = {}
     }
+    GetObject<T>(key: string, cache?: boolean)
+    {
+        cache = cache ?? true
+        if(cache && this.cache[key] !== undefined)
+        {
+            return this.cache[key] as T
+        }
+        return this.database.GetAsync(key) as T
+    }
+    SaveObject(key: string, value: any)
+    {
+        this.cache[key] =  value
+        this.database.SetAsync(key, value)   
+    }
+
     GetPlayerState(user: Player)
     {
         let player
@@ -60,6 +78,5 @@ class Database
         let d = this.database
         d.SetAsync(tostring(player.userId), player)
     }
-    database: GlobalDataStore
 }
 export {Database}

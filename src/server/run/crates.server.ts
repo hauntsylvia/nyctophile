@@ -22,7 +22,7 @@ for(let i = 0; i < allCrates.size(); i++)
         crateRemote.OnServerInvoke = function(user)
         {
             let player = db.GetPlayerState(user)
-
+            player.ashlin += 50
         }
         
         h.RegisterInteractable(thisInteractable)

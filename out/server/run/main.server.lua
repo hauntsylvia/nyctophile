@@ -69,6 +69,5 @@ apiHandler.OnServerInvoke = function(user, _upperServiceName, _lowerServiceName,
 	end
 end
 game:GetService("Players").PlayerRemoving:Connect(function(user)
-	print((database:GetPlayerState(user).playerSettings.playerKeys.interactKey))
 	database:SavePlayerState(database:GetPlayerState(user))
 end)

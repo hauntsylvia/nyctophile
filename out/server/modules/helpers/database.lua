@@ -18,9 +18,29 @@ do
 		local self = setmetatable({}, Database)
 		return self:constructor(...) or self
 	end
-	function Database:constructor()
-		local name = "11-02-2021.A.1"
+	function Database:constructor(newName)
+		local _condition = newName
+		if _condition == nil then
+			_condition = "11-02-2021.A.1"
+		end
+		local name = _condition
 		self.database = game:GetService("DataStoreService"):GetDataStore(name)
+		self.cache = {}
+	end
+	function Database:GetObject(key, cache)
+		local _condition = cache
+		if _condition == nil then
+			_condition = true
+		end
+		cache = _condition
+		if cache and self.cache[key] ~= nil then
+			return self.cache[key]
+		end
+		return self.database:GetAsync(key)
+	end
+	function Database:SaveObject(key, value)
+		self.cache[key] = value
+		self.database:SetAsync(key, value)
 	end
 	function Database:GetPlayerState(user)
 		local player

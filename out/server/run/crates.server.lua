@@ -29,6 +29,7 @@ do
 			local thisInteractable = Interactable.new(bp, 0, InteractableConfig.new("Crate", "A generic crate containing misc. items.", 24), crateRemote)
 			crateRemote.OnServerInvoke = function(user)
 				local player = db:GetPlayerState(user)
+				player.ashlin += 50
 			end
 			h:RegisterInteractable(thisInteractable)
 		else
