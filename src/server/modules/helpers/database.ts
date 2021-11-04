@@ -1,7 +1,8 @@
-import { PlayerCard } from "shared/entities/player-card"
-import { PlayerKeySettings } from "shared/entities/player-key-settings"
-import { PlayerSettings } from "shared/entities/player-settings"
-import { PlayerState } from "shared/entities/player-state"
+import { PlayerCard } from "shared/entities/player/player-card"
+import { PlayerInventory } from "shared/entities/player/player-inventory"
+import { PlayerKeySettings } from "shared/entities/player/player-key-settings"
+import { PlayerSettings } from "shared/entities/player/player-settings"
+import { PlayerState } from "shared/entities/player/player-state"
 
 const players = new Array<PlayerState>()
 class Database
@@ -43,6 +44,10 @@ class Database
                             "E",
                             "G"
                         )
+                    ),
+                    new PlayerInventory
+                    (
+                        5
                     )
                 )
             }

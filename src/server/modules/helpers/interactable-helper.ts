@@ -1,5 +1,5 @@
 import { Interactable } from "shared/entities/interactable"
-import { PlayerState } from "shared/entities/player-state"
+import { PlayerState } from "shared/entities/player/player-state"
 
 const allInteractablesRegistered = new Array<Interactable>()
 class InteractableHelper

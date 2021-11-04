@@ -11,7 +11,7 @@ do
 		local self = setmetatable({}, Item)
 		return self:constructor(...) or self
 	end
-	function Item:constructor(attachedModel, attachedPlayerUserId, attachedInteractable, remote)
+	function Item:constructor(attachedModel, attachedInteractable, remote)
 		self.attachedModel = attachedModel
 		self.attachedInteractable = attachedInteractable
 		self.remote = remote

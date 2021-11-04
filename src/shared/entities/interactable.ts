@@ -1,5 +1,5 @@
 import { InteractableConfig } from "./interactable-config"
-import { PlayerState } from "./player-state"
+import { PlayerState } from "./player/player-state"
 
 class Interactable
 {

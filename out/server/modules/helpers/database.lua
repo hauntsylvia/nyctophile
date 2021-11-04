@@ -1,9 +1,10 @@
 -- Compiled with roblox-ts v1.2.7
 local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
-local PlayerCard = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "player-card").PlayerCard
-local PlayerKeySettings = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "player-key-settings").PlayerKeySettings
-local PlayerSettings = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "player-settings").PlayerSettings
-local PlayerState = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "player-state").PlayerState
+local PlayerCard = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "player", "player-card").PlayerCard
+local PlayerInventory = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "player", "player-inventory").PlayerInventory
+local PlayerKeySettings = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "player", "player-key-settings").PlayerKeySettings
+local PlayerSettings = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "player", "player-settings").PlayerSettings
+local PlayerState = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "player", "player-state").PlayerState
 local players = {}
 local Database
 do
@@ -48,7 +49,7 @@ do
 			end
 			player = _condition
 			if player == nil then
-				player = PlayerState.new(user.UserId, 500, PlayerCard.new(0, "new"), PlayerSettings.new(PlayerKeySettings.new("E", "G")))
+				player = PlayerState.new(user.UserId, 500, PlayerCard.new(0, "new"), PlayerSettings.new(PlayerKeySettings.new("E", "G")), PlayerInventory.new(5))
 			end
 			local _player = player
 			-- ▼ Array.push ▼

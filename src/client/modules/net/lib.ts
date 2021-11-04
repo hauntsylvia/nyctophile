@@ -1,6 +1,6 @@
 import { APIResult } from "shared/api/api-result"
 import { Interactable } from "shared/entities/interactable"
-import { PlayerState } from "shared/entities/player-state"
+import { PlayerState } from "shared/entities/player/player-state"
 
 class Client
 {

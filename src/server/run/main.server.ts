@@ -1,11 +1,11 @@
 export { }
-import { PlayerCard } from "shared/entities/player-card"
-import { PlayerState } from "shared/entities/player-state"
+import { PlayerCard } from "shared/entities/player/player-card"
+import { PlayerState } from "shared/entities/player/player-state"
 import { Database } from "../modules/helpers/database"
 import { APIResult } from "shared/api/api-result"
 import { APIArgs } from "shared/api/api-args"
-import { PlayerSettings } from "shared/entities/player-settings"
-import { PlayerKeySettings } from "shared/entities/player-key-settings"
+import { PlayerSettings } from "shared/entities/player/player-settings"
+import { PlayerKeySettings } from "shared/entities/player/player-key-settings"
 
 const playerDirectory = new Instance("Folder", game.GetService("ReplicatedStorage"))
 playerDirectory.Name = "player"
