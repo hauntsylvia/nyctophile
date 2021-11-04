@@ -10,6 +10,7 @@ local runService = game:GetService("RunService")
 local userInputService = game:GetService("UserInputService")
 local function EvaluateInteractables()
 	local ints = lib:GetInteractables()
+	print("a")
 	if ints ~= nil then
 		do
 			local i = 0
