@@ -78,7 +78,6 @@ class BuildSystem
                     tweenService.Create(thisPart, new TweenInfo(1), {Transparency: 0.6}).Play()
                 }
             }
-
             this.uisConnection = game.GetService("UserInputService").InputEnded.Connect(function(inputObject, isProcessed)
             {
                 if(!isProcessed && s.attachedModel !== undefined && s.attachedModel.PrimaryPart !== undefined)
