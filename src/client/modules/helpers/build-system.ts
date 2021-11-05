@@ -132,14 +132,16 @@ class BuildSystem
                                 }
                                 else
                                 {
+                                    let closestNode: Node | undefined
                                     for(let i = 0; i < allNodesInGame.size(); i++)
                                     {
                                         let thisN = allNodesInGame[i]
-                                        if(thisN.position.sub(actualPosition).Magnitude <= (thisN.config.radius))
+                                        if(closestNode === undefined || actualPosition.sub(thisN.position).Magnitude < actualPosition.sub(closestNode.position).Magnitude)
                                         {
-                                            isValid = false
+                                            closestNode = thisN
                                         }
                                     }
+                                    isValid = closestNode !== undefined && actualPosition.sub(closestNode.position).Magnitude >= closestNode.config.radius
                                 }
                             }
                             let colorToTweenTo = isValid ? Color3.fromRGB(135, 255, 135) : Color3.fromRGB(255, 135, 135)

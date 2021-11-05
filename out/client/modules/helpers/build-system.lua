@@ -155,6 +155,7 @@ do
 								if #allNodesInGame <= 0 then
 									isValid = true
 								else
+									local closestNode
 									do
 										local i = 0
 										local _shouldIncrement = false
@@ -168,13 +169,27 @@ do
 												break
 											end
 											local thisN = allNodesInGame[i + 1]
-											local _position_1 = thisN.position
-											local _actualPosition = actualPosition
-											if (_position_1 - _actualPosition).Magnitude <= (thisN.config.radius) then
-												isValid = false
+											local _condition_2 = closestNode == nil
+											if not _condition_2 then
+												local _actualPosition = actualPosition
+												local _position_1 = thisN.position
+												local _exp = (_actualPosition - _position_1).Magnitude
+												local _actualPosition_1 = actualPosition
+												local _position_2 = closestNode.position
+												_condition_2 = _exp < (_actualPosition_1 - _position_2).Magnitude
+											end
+											if _condition_2 then
+												closestNode = thisN
 											end
 										end
 									end
+									local _condition_2 = closestNode ~= nil
+									if _condition_2 then
+										local _actualPosition = actualPosition
+										local _position_1 = closestNode.position
+										_condition_2 = (_actualPosition - _position_1).Magnitude >= closestNode.config.radius
+									end
+									isValid = _condition_2
 								end
 							end
 							local colorToTweenTo = isValid and Color3.fromRGB(135, 255, 135) or Color3.fromRGB(255, 135, 135)
