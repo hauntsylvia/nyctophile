@@ -10,7 +10,7 @@ local nodes = {}
 local dir = Instance.new("Folder", game:GetService("ReplicatedStorage"))
 dir.Name = "Placeables"
 local helper = NodeHelper.new(dir)
-local globalConfig = NodeConfig.new(50, {})
+local globalConfig = NodeConfig.new(100, {})
 game:GetService("Players").PlayerRemoving:Connect(function(user)
 	do
 		local i = 0
@@ -24,7 +24,7 @@ game:GetService("Players").PlayerRemoving:Connect(function(user)
 			if not (i < #nodes) then
 				break
 			end
-			if user.UserId == nodes[i + 1].owner.userId then
+			if user.UserId == nodes[i + 1].owner then
 				local _i = i
 				local nodeRemoving = table.remove(nodes, _i + 1)
 				if nodeRemoving ~= nil then
@@ -49,7 +49,7 @@ local function PlaceNode(args)
 			if not (i < #nodes) then
 				break
 			end
-			if nodes[i + 1].owner.userId == args.caller.userId then
+			if nodes[i + 1].owner == args.caller.userId then
 				return APIResult.new(nil, "Your node has already been placed.", false)
 			else
 				local _position = nodes[i + 1].position
@@ -60,7 +60,7 @@ local function PlaceNode(args)
 			end
 		end
 	end
-	local newNode = Node.new(args.caller, askingPosition, globalConfig)
+	local newNode = Node.new(args.caller.userId, askingPosition, globalConfig)
 	local _newNode = newNode
 	-- ▼ Array.push ▼
 	nodes[#nodes + 1] = _newNode
@@ -83,7 +83,7 @@ local function GetSelfNode(args)
 			if not (i < #nodes) then
 				break
 			end
-			if nodes[i + 1].owner.userId == args.caller.userId then
+			if nodes[i + 1].owner == args.caller.userId then
 				return APIResult.new(nodes[i + 1], "Successfully fetched your node.", true)
 			end
 		end
@@ -138,13 +138,12 @@ end
 local function GetAllPlaceables(args)
 	local reqPlayersNode = GetSelfNode(args)
 	if reqPlayersNode.success then
-		return helper:GetAllPossiblePlaceables(reqPlayersNode.result)
-	else
-		return reqPlayersNode
+		return APIResult.new(helper:GetAllPossiblePlaceables(reqPlayersNode.result), "Successfully fetched all possible placeables.", true)
 	end
+	return reqPlayersNode
 end
 thisService:RegisterNewLowerService("create").OnInvoke = PlaceNode
 thisService:RegisterNewLowerService("all").OnInvoke = GetAllNodes
 thisService:RegisterNewLowerService("me").OnInvoke = GetSelfNode
 thisService:RegisterNewLowerService("placeables.create").OnInvoke = CreateStructure
-thisService:RegisterNewLowerService("placeables.all").OnInvoke = CreateStructure
+thisService:RegisterNewLowerService("placeables.all").OnInvoke = GetAllPlaceables

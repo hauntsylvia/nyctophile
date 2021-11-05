@@ -1,5 +1,9 @@
 -- Compiled with roblox-ts v1.2.7
 local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
+local Node = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "node", "node").Node
+local NodeConfig = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "node", "node-config").NodeConfig
+local Placeable = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "node", "placeable").Placeable
+local PlaceableConfig = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "node", "placeable-config").PlaceableConfig
 local BuildSystem = TS.import(script, script.Parent, "modules", "helpers", "build-system").BuildSystem
 local Draw = TS.import(script, script.Parent, "modules", "helpers", "interactable-draw").Draw
 local Client = TS.import(script, script.Parent, "modules", "net", "lib").Client
@@ -8,6 +12,7 @@ local buildSystem = BuildSystem.new(lib)
 local draws = {}
 local plr = game:GetService("Players").LocalPlayer
 local me = lib:GetMe()
+local node
 local runService = game:GetService("RunService")
 local userInputService = game:GetService("UserInputService")
 local function EvaluateInteractables()
@@ -97,22 +102,25 @@ userInputService.InputEnded:Connect(function(inputObject, isProcessed)
 		if inputObject.KeyCode.Name == keySettings.interactKey and (closestDraw ~= nil and closestDraw:IsInRange(plr)) then
 			closestDraw:Interact()
 		elseif inputObject.KeyCode.Name == keySettings.buildSystemKey then
-			local selfNode = lib:GetNode()
+			local _condition = node
+			if _condition == nil then
+				_condition = lib:GetNode()
+			end
+			local selfNode = _condition
+			node = selfNode
 			if not buildSystem.isEnabled then
 				if selfNode ~= nil then
 					local larry = lib:GetAllPossiblePlaceables()
-					if larry ~= nil then
+					if larry ~= nil and #larry > 0 then
 						local thisModel = larry[1].attachedModel:Clone()
 						thisModel.Parent = game:GetService("Workspace")
-						buildSystem:Enable(thisModel, Enum.UserInputType.MouseButton1, inputObject.KeyCode, false, selfNode)
+						buildSystem:Enable(Placeable.new(selfNode, thisModel, PlaceableConfig.new(1, "", "", 0)), Enum.UserInputType.MouseButton1, nil, selfNode)
+					else
+						print("No placeables.")
 					end
 				else
-					local nodeModel = Instance.new("Model", game:GetService("Workspace"))
-					nodeModel.Name = "temp-node-model"
-					local nodePart = Instance.new("Part", nodeModel)
-					nodePart.Name = "temp-node-part"
-					nodeModel.PrimaryPart = nodePart
-					buildSystem:Enable(nodeModel, Enum.UserInputType.MouseButton1, inputObject.KeyCode, false)
+					local acceptInpType = Enum.UserInputType.MouseButton1
+					buildSystem:Enable(Placeable.new(Node.new(me.userId, Vector3.new(0, 0, 0), NodeConfig.new(0, {})), buildSystem:MakeNodeRepresentation(), PlaceableConfig.new(1, "", "", 0)), acceptInpType)
 				end
 			else
 				buildSystem:Disable()
@@ -121,6 +129,6 @@ userInputService.InputEnded:Connect(function(inputObject, isProcessed)
 	end
 end)
 EvaluateInteractables()
-while { wait(30) } do
+while { wait(120) } do
 	EvaluateInteractables()
 end

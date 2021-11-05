@@ -1,5 +1,8 @@
 import { Interactable } from "shared/entities/interactable";
 import { Node } from "shared/entities/node/node";
+import { NodeConfig } from "shared/entities/node/node-config";
+import { Placeable } from "shared/entities/node/placeable";
+import { PlaceableConfig } from "shared/entities/node/placeable-config";
 import { BuildSystem } from "./modules/helpers/build-system";
 import { Draw } from "./modules/helpers/interactable-draw";
 import { Client } from "./modules/net/lib";
@@ -10,6 +13,7 @@ const buildSystem = new BuildSystem(lib)
 let draws = new Array<Draw>()
 let plr = game.GetService("Players").LocalPlayer
 let me = lib.GetMe()
+let node: Node | undefined
 
 const runService = game.GetService("RunService")
 const userInputService = game.GetService("UserInputService")
@@ -82,27 +86,29 @@ userInputService.InputEnded.Connect(function(inputObject, isProcessed)
         }
         else if(inputObject.KeyCode.Name === keySettings.buildSystemKey)
         {
-            let selfNode = lib.GetNode()
+            let selfNode = node ?? lib.GetNode()
+            node = selfNode
             if(!buildSystem.isEnabled)
             {
                 if(selfNode !== undefined)
                 {
                     let larry = lib.GetAllPossiblePlaceables()
-                    if(larry !== undefined)
+                    if(larry !== undefined && larry.size() > 0)
                     {
                         let thisModel = larry[0].attachedModel.Clone()
                         thisModel.Parent = game.GetService("Workspace")
-                        buildSystem.Enable(thisModel, Enum.UserInputType.MouseButton1, inputObject.KeyCode, false, selfNode)
+                        buildSystem.Enable(new Placeable(selfNode, thisModel, new PlaceableConfig(1, "", "", 0)), Enum.UserInputType.MouseButton1, undefined, selfNode)
+                    }
+                    else
+                    {
+                        print("No placeables.")
                     }
                 }
                 else
                 {
-                    let nodeModel = new Instance("Model", game.GetService("Workspace"))
-                    nodeModel.Name = "temp-node-model"
-                    let nodePart = new Instance("Part", nodeModel)
-                    nodePart.Name = "temp-node-part"
-                    nodeModel.PrimaryPart = nodePart
-                    buildSystem.Enable(nodeModel, Enum.UserInputType.MouseButton1, inputObject.KeyCode, false)
+                    
+                    let acceptInpType = Enum.UserInputType.MouseButton1
+                    buildSystem.Enable(new Placeable(new Node(me.userId, new Vector3(0, 0, 0), new NodeConfig(0, new Array())), buildSystem.MakeNodeRepresentation(), new PlaceableConfig(1, "", "", 0)), acceptInpType)
                 }
             }
             else
@@ -113,7 +119,7 @@ userInputService.InputEnded.Connect(function(inputObject, isProcessed)
     }
 })
 EvaluateInteractables()
-while(wait(30))
+while(wait(120))
 {
     EvaluateInteractables()
 }

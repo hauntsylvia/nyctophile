@@ -16,13 +16,13 @@ const dir = new Instance("Folder", game.GetService("ReplicatedStorage"))
 dir.Name = "Placeables"
 const helper = new NodeHelper(dir)
 
-const globalConfig = new NodeConfig(50, new Array<number>())
+const globalConfig = new NodeConfig(100, new Array<number>())
 
 game.GetService("Players").PlayerRemoving.Connect(function(user)
 {
     for(let i = 0; i < nodes.size(); i++)
     {
-        if(user.UserId === nodes[i].owner.userId)
+        if(user.UserId === nodes[i].owner)
         {
             let nodeRemoving = nodes.remove(i)
             if(nodeRemoving !== undefined)
@@ -39,7 +39,7 @@ function PlaceNode(args: APIArgs)
     let askingPosition = args.clientArgs as Vector3
     for(let i = 0; i < nodes.size(); i++)
     {
-        if(nodes[i].owner.userId === args.caller.userId)
+        if(nodes[i].owner === args.caller.userId)
         {
             return new APIResult<any>(undefined, "Your node has already been placed.", false)
         }
@@ -48,19 +48,19 @@ function PlaceNode(args: APIArgs)
             return new APIResult<any>(undefined, "Can not place a node inside another player's node.", false)
         }
     }
-    let newNode = new Node(args.caller, askingPosition, globalConfig)
+    let newNode = new Node(args.caller.userId, askingPosition, globalConfig)
     nodes.push(newNode)
     return new APIResult<Node>(newNode, "Node successfully created and placed.", true)
 }
 function GetAllNodes(args: APIArgs)
 {
-    return new APIResult<  Array< Partial<Node> >  >(nodes, "Successfully grabbed all other nodes in game.", true)
+    return new APIResult<  Array< Node >  >(nodes, "Successfully grabbed all other nodes in game.", true)
 }
 function GetSelfNode(args: APIArgs)
 {
     for(let i = 0; i < nodes.size(); i++)
     {
-        if(nodes[i].owner.userId === args.caller.userId)
+        if(nodes[i].owner === args.caller.userId)
         {
             return new APIResult<Node>(nodes[i], "Successfully fetched your node.", true)
         }
@@ -112,16 +112,13 @@ function GetAllPlaceables(args: APIArgs)
     
     if(reqPlayersNode.success)
     {
-        return helper.GetAllPossiblePlaceables(reqPlayersNode.result)
+        return new APIResult<Array<Placeable>>(helper.GetAllPossiblePlaceables(reqPlayersNode.result), "Successfully fetched all possible placeables.", true) 
     }
-    else
-    {
-        return reqPlayersNode
-    }
+    return reqPlayersNode
 }
 
 thisService.RegisterNewLowerService("create").OnInvoke = PlaceNode
 thisService.RegisterNewLowerService("all").OnInvoke = GetAllNodes
 thisService.RegisterNewLowerService("me").OnInvoke = GetSelfNode
 thisService.RegisterNewLowerService("placeables.create").OnInvoke = CreateStructure
-thisService.RegisterNewLowerService("placeables.all").OnInvoke = CreateStructure
+thisService.RegisterNewLowerService("placeables.all").OnInvoke = GetAllPlaceables

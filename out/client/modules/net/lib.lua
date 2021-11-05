@@ -62,6 +62,7 @@ do
 	function InternalClient:constructor()
 	end
 	function InternalClient:Send(lower, upper, args)
+		print("sent to " .. (lower .. ("/" .. upper)))
 		local myEvents = game:GetService("ReplicatedStorage"):WaitForChild("player")
 		local serversEvent = game:GetService("ReplicatedStorage"):WaitForChild("api"):WaitForChild("func")
 		if serversEvent:IsA("RemoteFunction") then

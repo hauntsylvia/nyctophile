@@ -4,11 +4,11 @@ import { Placeable } from "./placeable"
 
 class Node
 {
-    owner: PlayerState
+    owner: number
     position: Vector3
     config: NodeConfig
     activePlaceables: Array<Placeable>
-    constructor(owner: PlayerState, position: Vector3, config: NodeConfig) 
+    constructor(owner: number, position: Vector3, config: NodeConfig) 
     { 
         this.owner = owner
         this.position = position

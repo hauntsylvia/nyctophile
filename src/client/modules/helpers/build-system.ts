@@ -1,27 +1,58 @@
 import { Node } from "shared/entities/node/node"
+import { Placeable } from "shared/entities/node/placeable"
 import { Client } from "../net/lib"
 
 const tweenService = game.GetService("TweenService")
 
 class BuildSystem
 {   
-    client: Client
+    
+    MakeNodeRepresentation(n?: Node)
+    {
+        let nodeModel = new Instance("Model", game.GetService("Workspace"))
+        nodeModel.Name = "temp-node-model"
+
+        let nodePart = new Instance("Part", nodeModel)
+        nodePart.Name = "temp-node-part"
+        nodePart.Size = new Vector3(7.5, 10, 7.5)
+        nodePart.Transparency = 0.7
+        nodePart.Material = Enum.Material.Neon
+        nodePart.CanCollide = false
+        nodePart.Anchored = true
+        nodePart.Color = Color3.fromRGB(255, 135, 135)
+        nodeModel.PrimaryPart = nodePart
+
+        if(n !== undefined)
+        {
+            let nodeRadius = new Instance("Part", nodeModel)
+            nodeRadius.Name = "temp-node-radius"
+            nodeRadius.Size = new Vector3(n.config.radius,  n.config.radius, n.config.radius)
+            nodeRadius.Transparency = 0.97
+            nodeRadius.Material = Enum.Material.Neon
+            nodeRadius.CanCollide = false
+            nodeRadius.Anchored = true
+            nodeRadius.Color = Color3.fromRGB(255, 135, 135)
+            nodeModel.SetPrimaryPartCFrame(new CFrame(n.position))
+        }
+
+        return nodeModel
+    }
     constructor(client: Client)
     {   this.client = client
     }
+    client: Client
     isEnabled: boolean = false
-    internallyHandleDisabling: boolean = true
+    private allRenderedNodes: Array<Model> = new Array<Model>()
     private attachedModel: Model | undefined
     private connection: RBXScriptConnection | undefined
     private uisConnection: RBXScriptConnection | undefined
-    Enable(attachedModel: Model, pressedToReturn: Enum.UserInputType, pressedToDisable: Enum.KeyCode, internallyHandleDisabling: boolean, node?: Node)
+    Enable(placeable: Placeable, pressedToReturn?: Enum.UserInputType, pressedToDisable?: Enum.KeyCode, node?: Node)
     {
         if(this.isEnabled)
         {
-            this._Disable()
+            this.Disable()
         }
-        this.internallyHandleDisabling = internallyHandleDisabling
-        this.attachedModel = attachedModel
+        this.attachedModel = placeable.attachedModel
         if(this.attachedModel.PrimaryPart !== undefined)
         {
             let actualPosition: Vector3
@@ -39,7 +70,8 @@ class BuildSystem
                 {
                     let thisPart = modelsDescendants[i] as BasePart
                     thisPart.Anchored = true
-                    tweenService.Create(thisPart, new TweenInfo(1), {Transparency: 0.8}).Play()
+                    thisPart.CanCollide = false
+                    tweenService.Create(thisPart, new TweenInfo(1), {Transparency: 0.6}).Play()
                 }
             }
 
@@ -47,19 +79,31 @@ class BuildSystem
             {
                 if(!isProcessed && s.attachedModel !== undefined && s.attachedModel.PrimaryPart !== undefined)
                 {
-                    if(inputObject.UserInputType === pressedToReturn && isValid)
+                    if(pressedToReturn !== undefined && inputObject.UserInputType === pressedToReturn && isValid)
                     {
-                        s._Disable()
-                        return actualPosition
+                        if(node === undefined)
+                        {
+                            s.client.PlaceNode(actualPosition)
+                            s.Disable()
+                        }
+                        else
+                        {
+                            s.client.PlacePlaceable(placeable)
+                            s.Disable()
+                        }
                     }
-                    else if(inputObject.KeyCode === pressedToDisable)
+                    else if(pressedToDisable !== undefined && inputObject.KeyCode === pressedToDisable)
                     {
-                        s._Disable()
-                        return undefined
+                        s.Disable()
                     }
                 }
             })
             let allNodesInGame = this.client.GetAllOtherPlayersNodes() ?? new Array<Node>()
+            for(let n = 0; n < allNodesInGame.size(); n++)
+            {
+                let thisNodeModel = s.MakeNodeRepresentation(allNodesInGame[n])
+                s.allRenderedNodes.push(thisNodeModel)
+            }
             this.connection = game.GetService("RunService").RenderStepped.Connect(function(deltaTime)
             {
                 if(s.attachedModel !== undefined)
@@ -75,21 +119,25 @@ class BuildSystem
                         let raycastResult = game.GetService("Workspace").Raycast(ray.Origin, ray.Direction.mul(1000), raycastParams)
                         if(raycastResult !== undefined)
                         {
+                            actualPosition = raycastResult.Position.add(new Vector3(0, s.attachedModel.GetExtentsSize().div(2).Y, 0))
                             if(node !== undefined)
                             {                        
                                 isValid = node.position.sub(s.attachedModel.PrimaryPart.Position).Magnitude <= node.config.radius
                             }
                             else if(allNodesInGame !== undefined)
                             {
-                                for(let i = 0; i < allNodesInGame.size(); i++)
+                                if(allNodesInGame.size() <= 0)
                                 {
-                                    let thisN = allNodesInGame[i]
-                                    if(thisN.config !== undefined && thisN.position !== undefined)
+                                    isValid = true
+                                }
+                                else
+                                {
+                                    for(let i = 0; i < allNodesInGame.size(); i++)
                                     {
-                                        if(thisN.position?.sub(s.attachedModel.PrimaryPart.Position).Magnitude <= (thisN.config?.radius * 2))
+                                        let thisN = allNodesInGame[i]
+                                        if(thisN.position.sub(actualPosition).Magnitude <= (thisN.config.radius))
                                         {
-                                            isValid = true
-                                            break
+                                            isValid = false
                                         }
                                     }
                                 }
@@ -101,10 +149,9 @@ class BuildSystem
                                 let thisPart = allDesc[i]
                                 if(thisPart.IsA("BasePart"))
                                 {
-                                    tweenService.Create(thisPart, new TweenInfo(0.4), {Color: colorToTweenTo}).Play()
+                                    thisPart.Color = thisPart.Color.Lerp(colorToTweenTo, 0.2)
                                 }
                             }
-                            actualPosition = raycastResult.Position.add(s.attachedModel.GetExtentsSize()).div(2)
                             let fakePosition = s.attachedModel.PrimaryPart.CFrame.Lerp(new CFrame(actualPosition), 0.2)
                             s.attachedModel.SetPrimaryPartCFrame(fakePosition)
                         }
@@ -121,28 +168,25 @@ class BuildSystem
             error("No primary part exists on this model.")
         }
     }
-    private _Disable(overrideInternallyHandleDisabling: boolean = false)
-    {
-        if(this.internallyHandleDisabling || overrideInternallyHandleDisabling)
-        {
-            this.isEnabled = false
-            if(this.attachedModel !== undefined)
-            {
-                this.attachedModel.Destroy()
-            }
-            if(this.connection !== undefined)
-            {
-                this.connection.Disconnect()
-            }
-            if(this.uisConnection !== undefined)
-            {
-                this.connection?.Disconnect()
-            }
-        }
-    }
     Disable()
-    {   
-        this._Disable(true)
+    {
+        this.isEnabled = false
+        if(this.attachedModel !== undefined)
+        {
+            this.attachedModel.Destroy()
+        }
+        if(this.connection !== undefined)
+        {
+            this.connection.Disconnect()
+        }
+        if(this.uisConnection !== undefined)
+        {
+            this.connection?.Disconnect()
+        }
+        for(let i = 0; i < this.allRenderedNodes.size(); i++)
+        {
+            this.allRenderedNodes[i].Destroy()
+        }
     }
 }
 export { BuildSystem }

@@ -14,15 +14,39 @@ do
 	end
 	function BuildSystem:constructor(client)
 		self.isEnabled = false
-		self.internallyHandleDisabling = true
+		self.allRenderedNodes = {}
 		self.client = client
 	end
-	function BuildSystem:Enable(attachedModel, pressedToReturn, pressedToDisable, internallyHandleDisabling, node)
-		if self.isEnabled then
-			self:_Disable()
+	function BuildSystem:MakeNodeRepresentation(n)
+		local nodeModel = Instance.new("Model", game:GetService("Workspace"))
+		nodeModel.Name = "temp-node-model"
+		local nodePart = Instance.new("Part", nodeModel)
+		nodePart.Name = "temp-node-part"
+		nodePart.Size = Vector3.new(7.5, 10, 7.5)
+		nodePart.Transparency = 0.7
+		nodePart.Material = Enum.Material.Neon
+		nodePart.CanCollide = false
+		nodePart.Anchored = true
+		nodePart.Color = Color3.fromRGB(255, 135, 135)
+		nodeModel.PrimaryPart = nodePart
+		if n ~= nil then
+			local nodeRadius = Instance.new("Part", nodeModel)
+			nodeRadius.Name = "temp-node-radius"
+			nodeRadius.Size = Vector3.new(n.config.radius, n.config.radius, n.config.radius)
+			nodeRadius.Transparency = 0.97
+			nodeRadius.Material = Enum.Material.Neon
+			nodeRadius.CanCollide = false
+			nodeRadius.Anchored = true
+			nodeRadius.Color = Color3.fromRGB(255, 135, 135)
+			nodeModel:SetPrimaryPartCFrame(CFrame.new(n.position))
 		end
-		self.internallyHandleDisabling = internallyHandleDisabling
-		self.attachedModel = attachedModel
+		return nodeModel
+	end
+	function BuildSystem:Enable(placeable, pressedToReturn, pressedToDisable, node)
+		if self.isEnabled then
+			self:Disable()
+		end
+		self.attachedModel = placeable.attachedModel
 		if self.attachedModel.PrimaryPart ~= nil then
 			local actualPosition
 			self.isEnabled = true
@@ -51,20 +75,25 @@ do
 					if modelsDescendants[i + 1]:IsA("BasePart") then
 						local thisPart = modelsDescendants[i + 1]
 						thisPart.Anchored = true
+						thisPart.CanCollide = false
 						tweenService:Create(thisPart, TweenInfo.new(1), {
-							Transparency = 0.8,
+							Transparency = 0.6,
 						}):Play()
 					end
 				end
 			end
 			self.uisConnection = game:GetService("UserInputService").InputEnded:Connect(function(inputObject, isProcessed)
 				if not isProcessed and (s.attachedModel ~= nil and s.attachedModel.PrimaryPart ~= nil) then
-					if inputObject.UserInputType == pressedToReturn and isValid then
-						s:_Disable()
-						return actualPosition
-					elseif inputObject.KeyCode == pressedToDisable then
-						s:_Disable()
-						return nil
+					if pressedToReturn ~= nil and (inputObject.UserInputType == pressedToReturn and isValid) then
+						if node == nil then
+							s.client:PlaceNode(actualPosition)
+							s:Disable()
+						else
+							s.client:PlacePlaceable(placeable)
+							s:Disable()
+						end
+					elseif pressedToDisable ~= nil and inputObject.KeyCode == pressedToDisable then
+						s:Disable()
 					end
 				end
 			end)
@@ -73,6 +102,26 @@ do
 				_condition_1 = {}
 			end
 			local allNodesInGame = _condition_1
+			do
+				local n = 0
+				local _shouldIncrement = false
+				while true do
+					if _shouldIncrement then
+						n += 1
+					else
+						_shouldIncrement = true
+					end
+					if not (n < #allNodesInGame) then
+						break
+					end
+					local thisNodeModel = s:MakeNodeRepresentation(allNodesInGame[n + 1])
+					local _allRenderedNodes = s.allRenderedNodes
+					local _thisNodeModel = thisNodeModel
+					-- ▼ Array.push ▼
+					_allRenderedNodes[#_allRenderedNodes + 1] = _thisNodeModel
+					-- ▲ Array.push ▲
+				end
+			end
 			self.connection = game:GetService("RunService").RenderStepped:Connect(function(deltaTime)
 				if s.attachedModel ~= nil then
 					local _ray = game:GetService("Workspace").CurrentCamera
@@ -95,37 +144,34 @@ do
 						raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
 						local raycastResult = game:GetService("Workspace"):Raycast(ray.Origin, ray.Direction * 1000, raycastParams)
 						if raycastResult ~= nil then
+							local _position = raycastResult.Position
+							local _vector3 = Vector3.new(0, (s.attachedModel:GetExtentsSize() / 2).Y, 0)
+							actualPosition = _position + _vector3
 							if node ~= nil then
-								local _position = node.position
-								local _position_1 = s.attachedModel.PrimaryPart.Position
-								isValid = (_position - _position_1).Magnitude <= node.config.radius
+								local _position_1 = node.position
+								local _position_2 = s.attachedModel.PrimaryPart.Position
+								isValid = (_position_1 - _position_2).Magnitude <= node.config.radius
 							elseif allNodesInGame ~= nil then
-								do
-									local i = 0
-									local _shouldIncrement = false
-									while true do
-										if _shouldIncrement then
-											i += 1
-										else
-											_shouldIncrement = true
-										end
-										if not (i < #allNodesInGame) then
-											break
-										end
-										local thisN = allNodesInGame[i + 1]
-										if thisN.config ~= nil and thisN.position ~= nil then
-											local _result = thisN.position
-											if _result ~= nil then
-												local _position = s.attachedModel.PrimaryPart.Position
-												_result = (_result - _position).Magnitude
+								if #allNodesInGame <= 0 then
+									isValid = true
+								else
+									do
+										local i = 0
+										local _shouldIncrement = false
+										while true do
+											if _shouldIncrement then
+												i += 1
+											else
+												_shouldIncrement = true
 											end
-											local _result_1 = thisN.config
-											if _result_1 ~= nil then
-												_result_1 = _result_1.radius
-											end
-											if _result <= (_result_1 * 2) then
-												isValid = true
+											if not (i < #allNodesInGame) then
 												break
+											end
+											local thisN = allNodesInGame[i + 1]
+											local _position_1 = thisN.position
+											local _actualPosition = actualPosition
+											if (_position_1 - _actualPosition).Magnitude <= (thisN.config.radius) then
+												isValid = false
 											end
 										end
 									end
@@ -147,15 +193,10 @@ do
 									end
 									local thisPart = allDesc[i + 1]
 									if thisPart:IsA("BasePart") then
-										tweenService:Create(thisPart, TweenInfo.new(0.4), {
-											Color = colorToTweenTo,
-										}):Play()
+										thisPart.Color = thisPart.Color:Lerp(colorToTweenTo, 0.2)
 									end
 								end
 							end
-							local _position = raycastResult.Position
-							local _arg0 = s.attachedModel:GetExtentsSize()
-							actualPosition = (_position + _arg0) / 2
 							local fakePosition = s.attachedModel.PrimaryPart.CFrame:Lerp(CFrame.new(actualPosition), 0.2)
 							s.attachedModel:SetPrimaryPartCFrame(fakePosition)
 						end
@@ -168,28 +209,35 @@ do
 			error("No primary part exists on this model.")
 		end
 	end
-	function BuildSystem:_Disable(overrideInternallyHandleDisabling)
-		if overrideInternallyHandleDisabling == nil then
-			overrideInternallyHandleDisabling = false
-		end
-		if self.internallyHandleDisabling or overrideInternallyHandleDisabling then
-			self.isEnabled = false
-			if self.attachedModel ~= nil then
-				self.attachedModel:Destroy()
-			end
-			if self.connection ~= nil then
-				self.connection:Disconnect()
-			end
-			if self.uisConnection ~= nil then
-				local _result = self.connection
-				if _result ~= nil then
-					_result:Disconnect()
-				end
-			end
-		end
-	end
 	function BuildSystem:Disable()
-		self:_Disable(true)
+		self.isEnabled = false
+		if self.attachedModel ~= nil then
+			self.attachedModel:Destroy()
+		end
+		if self.connection ~= nil then
+			self.connection:Disconnect()
+		end
+		if self.uisConnection ~= nil then
+			local _result = self.connection
+			if _result ~= nil then
+				_result:Disconnect()
+			end
+		end
+		do
+			local i = 0
+			local _shouldIncrement = false
+			while true do
+				if _shouldIncrement then
+					i += 1
+				else
+					_shouldIncrement = true
+				end
+				if not (i < #self.allRenderedNodes) then
+					break
+				end
+				self.allRenderedNodes[i + 1]:Destroy()
+			end
+		end
 	end
 end
 return {

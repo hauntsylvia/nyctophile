@@ -38,7 +38,7 @@ class Client
     }
     GetAllOtherPlayersNodes()
     {
-        let n = this.client.Send<Array< Partial<Node> >>("nodes", "all", undefined)
+        let n = this.client.Send<Array<Node>>("nodes", "all", undefined)
         return n
     }
     PlacePlaceable(placeable: Placeable)
@@ -57,6 +57,7 @@ class InternalClient
 {
     Send<T>(lower: string, upper: string, args: any)
     {
+        print(`sent to ${lower}/${upper}`)
         let myEvents = game.GetService("ReplicatedStorage").WaitForChild("player")
         let serversEvent = game.GetService("ReplicatedStorage").WaitForChild("api").WaitForChild("func")
         if(serversEvent.IsA("RemoteFunction"))
