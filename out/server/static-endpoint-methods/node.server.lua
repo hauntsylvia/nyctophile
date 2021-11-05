@@ -7,9 +7,15 @@ local NodeConfig = TS.import(script, game:GetService("ReplicatedStorage"), "TS",
 local NodeHelper = TS.import(script, game:GetService("ServerScriptService"), "TS", "modules", "helpers", "node-helper").NodeHelper
 local thisService = APIRegister.new("nodes")
 local nodes = {}
-local dir = Instance.new("Folder", game:GetService("ReplicatedStorage"))
-dir.Name = "Placeables"
-local helper = NodeHelper.new(dir)
+local helper
+local dir = game:GetService("ReplicatedStorage"):FindFirstChild("Placeables")
+if dir == nil then
+	local dir = Instance.new("Folder", game:GetService("ReplicatedStorage"))
+	dir.Name = "Placeables"
+	helper = NodeHelper.new(dir)
+else
+	helper = NodeHelper.new(dir)
+end
 local globalConfig = NodeConfig.new(100, {})
 game:GetService("Players").PlayerRemoving:Connect(function(user)
 	do
@@ -94,7 +100,8 @@ local function CreateStructure(args)
 	local reqPlayersNode = GetSelfNode(args)
 	if reqPlayersNode.success then
 		local playersNode = reqPlayersNode.result
-		local requestedPlaceable = args.clientArgs
+		local requestedPlaceable = (args.clientArgs)[1]
+		local requestedPosition = (args.clientArgs)[2]
 		local realPlaceable = helper:GetRealFromUntrustedPlaceable(requestedPlaceable)
 		if realPlaceable ~= nil then
 			if args.caller.ashlin >= realPlaceable.config.cost then
@@ -120,8 +127,16 @@ local function CreateStructure(args)
 				-- ▲ ReadonlyArray.filter ▲
 				numberOfThisAlreadyPlaced = #_newValue
 				if numberOfThisAlreadyPlaced < realPlaceable.config.maxOfThisAllowed then
-					args.caller.ashlin -= realPlaceable.config.cost
-					return APIResult.new(realPlaceable, "Successfully placed.", true)
+					local _position = playersNode.position
+					local _position_1 = requestedPosition.Position
+					if (_position - _position_1).Magnitude <= playersNode.config.radius then
+						args.caller.ashlin -= realPlaceable.config.cost
+						realPlaceable.attachedModel.Parent = game:GetService("Workspace")
+						realPlaceable.attachedModel:SetPrimaryPartCFrame(requestedPosition)
+						return APIResult.new(realPlaceable, "Successfully placed.", true)
+					else
+						return APIResult.new(nil, "Invalid location. Placeable must be inside of node.", false)
+					end
 				else
 					return APIResult.new(nil, "Maximum number of this placeable reached.", false)
 				end
@@ -138,7 +153,8 @@ end
 local function GetAllPlaceables(args)
 	local reqPlayersNode = GetSelfNode(args)
 	if reqPlayersNode.success then
-		return APIResult.new(helper:GetAllPossiblePlaceables(reqPlayersNode.result), "Successfully fetched all possible placeables.", true)
+		local all = helper:GetAllPossiblePlaceables(reqPlayersNode.result)
+		return APIResult.new(all, "Successfully fetched all possible placeables.", true)
 	end
 	return reqPlayersNode
 end

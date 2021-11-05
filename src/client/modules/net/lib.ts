@@ -41,9 +41,9 @@ class Client
         let n = this.client.Send<Array<Node>>("nodes", "all", undefined)
         return n
     }
-    PlacePlaceable(placeable: Placeable)
+    PlacePlaceable(ar: Array<any>)
     {
-        let n = this.client.Send<Array<Placeable>>("nodes", "placeables.create", placeable)
+        let n = this.client.Send<Array<Placeable>>("nodes", "placeables.create", ar)
         return n
     }
     GetAllPossiblePlaceables()

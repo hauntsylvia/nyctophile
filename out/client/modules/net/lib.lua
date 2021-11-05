@@ -39,8 +39,8 @@ do
 		local n = self.client:Send("nodes", "all", nil)
 		return n
 	end
-	function Client:PlacePlaceable(placeable)
-		local n = self.client:Send("nodes", "placeables.create", placeable)
+	function Client:PlacePlaceable(ar)
+		local n = self.client:Send("nodes", "placeables.create", ar)
 		return n
 	end
 	function Client:GetAllPossiblePlaceables()

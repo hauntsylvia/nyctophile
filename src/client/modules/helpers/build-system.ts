@@ -46,16 +46,20 @@ class BuildSystem
     private attachedModel: Model | undefined
     private connection: RBXScriptConnection | undefined
     private uisConnection: RBXScriptConnection | undefined
+    private uisContConnection: RBXScriptConnection | undefined
     Enable(placeable: Placeable, pressedToReturn?: Enum.UserInputType, pressedToDisable?: Enum.KeyCode, node?: Node)
     {
         if(this.isEnabled)
         {
             this.Disable()
         }
-        this.attachedModel = placeable.attachedModel
+        this.attachedModel = placeable.attachedModel.Clone()
+        this.attachedModel.Parent = game.GetService("Workspace")
+        this.attachedModel.Name = "temp-build-system-attachment"
         if(this.attachedModel.PrimaryPart !== undefined)
         {
             let actualPosition: Vector3
+            let actualRotation: CFrame = CFrame.fromEulerAnglesXYZ(0, 0, 0)
             this.isEnabled = true
             let plr = game.GetService("Players").LocalPlayer
             let mouse = plr.GetMouse()
@@ -88,7 +92,9 @@ class BuildSystem
                         }
                         else
                         {
-                            s.client.PlacePlaceable(placeable)
+                            let ar = new Array<any>()
+                            ar.push(placeable, (new CFrame(actualPosition).mul(actualRotation)))
+                            s.client.PlacePlaceable(ar)
                             s.Disable()
                         }
                     }
@@ -98,11 +104,51 @@ class BuildSystem
                     }
                 }
             })
+            this.uisContConnection = game.GetService("UserInputService").InputBegan.Connect(function(inputObject, isProcessed)
+            {
+                if(!isProcessed)
+                {
+                    let condition = true
+                    if(inputObject.KeyCode === Enum.KeyCode.E)
+                    {
+                        let e = game.GetService("UserInputService").InputEnded.Connect(function(newInp, isP)
+                        {
+                            if(!isP && newInp.KeyCode === inputObject.KeyCode)
+                            {
+                                condition = false
+                            }
+                        })
+                        while(condition && wait())
+                        {
+                            actualRotation = actualRotation.mul(CFrame.fromEulerAnglesXYZ(0, -0.25, 0))
+                        }
+                        e.Disconnect()
+                    }
+                    else if(inputObject.KeyCode === Enum.KeyCode.Q)
+                    {
+                        let e = game.GetService("UserInputService").InputEnded.Connect(function(newInp, isP)
+                        {
+                            if(!isP && newInp.KeyCode === inputObject.KeyCode)
+                            {
+                                condition = false
+                            }
+                        })
+                        while(condition && wait())
+                        {
+                            actualRotation = actualRotation.mul(CFrame.fromEulerAnglesXYZ(0, 0.25, 0))
+                        }
+                        e.Disconnect()
+                    }
+                }
+            })
             let allNodesInGame = this.client.GetAllOtherPlayersNodes() ?? new Array<Node>()
             for(let n = 0; n < allNodesInGame.size(); n++)
             {
-                let thisNodeModel = s.MakeNodeRepresentation(allNodesInGame[n])
-                s.allRenderedNodes.push(thisNodeModel)
+                if(allNodesInGame[n].owner !== plr.UserId)
+                {
+                    let thisNodeModel = s.MakeNodeRepresentation(allNodesInGame[n])
+                    s.allRenderedNodes.push(thisNodeModel)
+                }
             }
             this.connection = game.GetService("RunService").RenderStepped.Connect(function(deltaTime)
             {
@@ -115,6 +161,14 @@ class BuildSystem
                         let ignore = new Array<Instance>()
                         ignore.push(s.attachedModel, char)
                         raycastParams.FilterDescendantsInstances = ignore
+
+                        if(node !== undefined)
+                        {
+                            let thisRenderedNode = s.MakeNodeRepresentation()
+                            s.allRenderedNodes.push(thisRenderedNode)
+                            ignore.push(thisRenderedNode)
+                        }
+
                         raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
                         let raycastResult = game.GetService("Workspace").Raycast(ray.Origin, ray.Direction.mul(1000), raycastParams)
                         if(raycastResult !== undefined)
@@ -154,7 +208,7 @@ class BuildSystem
                                     thisPart.Color = thisPart.Color.Lerp(colorToTweenTo, 0.2)
                                 }
                             }
-                            let fakePosition = s.attachedModel.PrimaryPart.CFrame.Lerp(new CFrame(actualPosition), 0.2)
+                            let fakePosition = s.attachedModel.PrimaryPart.CFrame.Lerp(new CFrame(actualPosition).mul(actualRotation), 0.2)
                             s.attachedModel.SetPrimaryPartCFrame(fakePosition)
                         }
                     }
@@ -183,7 +237,11 @@ class BuildSystem
         }
         if(this.uisConnection !== undefined)
         {
-            this.connection?.Disconnect()
+            this.uisConnection.Disconnect()
+        }
+        if(this.uisContConnection !== undefined)
+        {
+            this.uisContConnection.Disconnect()
         }
         for(let i = 0; i < this.allRenderedNodes.size(); i++)
         {

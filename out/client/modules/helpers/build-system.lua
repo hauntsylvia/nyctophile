@@ -46,9 +46,12 @@ do
 		if self.isEnabled then
 			self:Disable()
 		end
-		self.attachedModel = placeable.attachedModel
+		self.attachedModel = placeable.attachedModel:Clone()
+		self.attachedModel.Parent = game:GetService("Workspace")
+		self.attachedModel.Name = "temp-build-system-attachment"
 		if self.attachedModel.PrimaryPart ~= nil then
 			local actualPosition
+			local actualRotation = CFrame.fromEulerAnglesXYZ(0, 0, 0)
 			self.isEnabled = true
 			local plr = game:GetService("Players").LocalPlayer
 			local mouse = plr:GetMouse()
@@ -89,11 +92,51 @@ do
 							s.client:PlaceNode(actualPosition)
 							s:Disable()
 						else
-							s.client:PlacePlaceable(placeable)
+							local ar = {}
+							local _ar = ar
+							local _cFrame = CFrame.new(actualPosition)
+							local _actualRotation = actualRotation
+							-- ▼ Array.push ▼
+							local _arg1 = (_cFrame * _actualRotation)
+							local _length = #_ar
+							_ar[_length + 1] = placeable
+							_ar[_length + 2] = _arg1
+							-- ▲ Array.push ▲
+							s.client:PlacePlaceable(ar)
 							s:Disable()
 						end
 					elseif pressedToDisable ~= nil and inputObject.KeyCode == pressedToDisable then
 						s:Disable()
+					end
+				end
+			end)
+			self.uisContConnection = game:GetService("UserInputService").InputBegan:Connect(function(inputObject, isProcessed)
+				if not isProcessed then
+					local condition = true
+					if inputObject.KeyCode == Enum.KeyCode.E then
+						local e = game:GetService("UserInputService").InputEnded:Connect(function(newInp, isP)
+							if not isP and newInp.KeyCode == inputObject.KeyCode then
+								condition = false
+							end
+						end)
+						while condition and { wait() } do
+							local _actualRotation = actualRotation
+							local _arg0 = CFrame.fromEulerAnglesXYZ(0, -0.25, 0)
+							actualRotation = _actualRotation * _arg0
+						end
+						e:Disconnect()
+					elseif inputObject.KeyCode == Enum.KeyCode.Q then
+						local e = game:GetService("UserInputService").InputEnded:Connect(function(newInp, isP)
+							if not isP and newInp.KeyCode == inputObject.KeyCode then
+								condition = false
+							end
+						end)
+						while condition and { wait() } do
+							local _actualRotation = actualRotation
+							local _arg0 = CFrame.fromEulerAnglesXYZ(0, 0.25, 0)
+							actualRotation = _actualRotation * _arg0
+						end
+						e:Disconnect()
 					end
 				end
 			end)
@@ -114,12 +157,14 @@ do
 					if not (n < #allNodesInGame) then
 						break
 					end
-					local thisNodeModel = s:MakeNodeRepresentation(allNodesInGame[n + 1])
-					local _allRenderedNodes = s.allRenderedNodes
-					local _thisNodeModel = thisNodeModel
-					-- ▼ Array.push ▼
-					_allRenderedNodes[#_allRenderedNodes + 1] = _thisNodeModel
-					-- ▲ Array.push ▲
+					if allNodesInGame[n + 1].owner ~= plr.UserId then
+						local thisNodeModel = s:MakeNodeRepresentation(allNodesInGame[n + 1])
+						local _allRenderedNodes = s.allRenderedNodes
+						local _thisNodeModel = thisNodeModel
+						-- ▼ Array.push ▼
+						_allRenderedNodes[#_allRenderedNodes + 1] = _thisNodeModel
+						-- ▲ Array.push ▲
+					end
 				end
 			end
 			self.connection = game:GetService("RunService").RenderStepped:Connect(function(deltaTime)
@@ -141,6 +186,19 @@ do
 						_ignore[_length + 2] = _char
 						-- ▲ Array.push ▲
 						raycastParams.FilterDescendantsInstances = ignore
+						if node ~= nil then
+							local thisRenderedNode = s:MakeNodeRepresentation()
+							local _allRenderedNodes = s.allRenderedNodes
+							local _thisRenderedNode = thisRenderedNode
+							-- ▼ Array.push ▼
+							_allRenderedNodes[#_allRenderedNodes + 1] = _thisRenderedNode
+							-- ▲ Array.push ▲
+							local _ignore_1 = ignore
+							local _thisRenderedNode_1 = thisRenderedNode
+							-- ▼ Array.push ▼
+							_ignore_1[#_ignore_1 + 1] = _thisRenderedNode_1
+							-- ▲ Array.push ▲
+						end
 						raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
 						local raycastResult = game:GetService("Workspace"):Raycast(ray.Origin, ray.Direction * 1000, raycastParams)
 						if raycastResult ~= nil then
@@ -212,7 +270,10 @@ do
 									end
 								end
 							end
-							local fakePosition = s.attachedModel.PrimaryPart.CFrame:Lerp(CFrame.new(actualPosition), 0.2)
+							local _fn = s.attachedModel.PrimaryPart.CFrame
+							local _cFrame = CFrame.new(actualPosition)
+							local _actualRotation = actualRotation
+							local fakePosition = _fn:Lerp(_cFrame * _actualRotation, 0.2)
 							s.attachedModel:SetPrimaryPartCFrame(fakePosition)
 						end
 					elseif s.attachedModel.PrimaryPart == nil then
@@ -233,10 +294,10 @@ do
 			self.connection:Disconnect()
 		end
 		if self.uisConnection ~= nil then
-			local _result = self.connection
-			if _result ~= nil then
-				_result:Disconnect()
-			end
+			self.uisConnection:Disconnect()
+		end
+		if self.uisContConnection ~= nil then
+			self.uisContConnection:Disconnect()
 		end
 		do
 			local i = 0

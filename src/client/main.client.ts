@@ -8,15 +8,18 @@ import { Draw } from "./modules/helpers/interactable-draw";
 import { Client } from "./modules/net/lib";
 
 const lib = new Client()
-const buildSystem = new BuildSystem(lib)
 
 let draws = new Array<Draw>()
 let plr = game.GetService("Players").LocalPlayer
 let me = lib.GetMe()
 let node: Node | undefined
 
+const buildSystem = new BuildSystem(lib)
+const buildUI = plr.WaitForChild("PlayerGui").WaitForChild("BuildingsGUI")
+
 const runService = game.GetService("RunService")
 const userInputService = game.GetService("UserInputService")
+const tweenService = game.GetService("TweenService")
 
 function EvaluateInteractables()
 {
@@ -75,6 +78,7 @@ runService.Heartbeat.Connect(function(deltaTime)
         }
     }
 })
+let isInBuildUI: boolean = false
 userInputService.InputEnded.Connect(function(inputObject, isProcessed)
 {
     if(!isProcessed && me !== undefined)
@@ -92,16 +96,45 @@ userInputService.InputEnded.Connect(function(inputObject, isProcessed)
             {
                 if(selfNode !== undefined)
                 {
-                    let larry = lib.GetAllPossiblePlaceables()
-                    if(larry !== undefined && larry.size() > 0)
+                    let scrollFrame = buildUI.FindFirstChild("Screen")?.FindFirstChild("Placeables")?.FindFirstChild("Placeables")
+                    let children = scrollFrame?.GetChildren()
+                    if(children !== undefined)
                     {
-                        let thisModel = larry[0].attachedModel.Clone()
-                        thisModel.Parent = game.GetService("Workspace")
-                        buildSystem.Enable(new Placeable(selfNode, thisModel, new PlaceableConfig(1, "", "", 0)), Enum.UserInputType.MouseButton1, undefined, selfNode)
+                        for(let i = 0; i < children.size(); i++)
+                        {
+                            if(children[i].Name.lower() !== "a" && children[i].IsA("Frame"))
+                            {
+                                children[i].Destroy()
+                            }
+                        }
                     }
-                    else
+                    let larry = lib.GetAllPossiblePlaceables()
+                    if(larry !== undefined)
                     {
-                        print("No placeables.")
+                        for(let i = 0; i < larry.size(); i++)
+                        {
+                            let placementUIFrame = scrollFrame?.FindFirstChild("A")?.Clone() as Frame
+                            placementUIFrame.Parent = scrollFrame
+                            placementUIFrame.Visible = true
+                            placementUIFrame.Name = "_"
+                            placementUIFrame.BackgroundTransparency = 1
+                            tweenService.Create(placementUIFrame, new TweenInfo(0.2), {BackgroundTransparency: 0}).Play()
+                            let b = placementUIFrame.FindFirstChild("B") as TextButton
+                            print(larry[i].config.name)
+                            b.Text = larry[i].config.name
+                            b.MouseButton1Up.Connect(function()
+                            {
+                                if(larry !== undefined && larry.size() > 0)
+                                {
+                                    buildSystem.Disable()
+                                    buildSystem.Enable(larry[i], Enum.UserInputType.MouseButton1, undefined, selfNode)
+                                }
+                                else
+                                {
+                                    print("No placeables.")
+                                }
+                            })
+                        }
                     }
                 }
                 else

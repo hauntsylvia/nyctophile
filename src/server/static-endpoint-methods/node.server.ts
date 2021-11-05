@@ -11,10 +11,19 @@ import { NodeHelper } from "server/modules/helpers/node-helper"
 
 const thisService = new APIRegister("nodes")
 const nodes = new Array<Node>()
+let helper: NodeHelper
 
-const dir = new Instance("Folder", game.GetService("ReplicatedStorage"))
-dir.Name = "Placeables"
-const helper = new NodeHelper(dir)
+let dir = game.GetService("ReplicatedStorage").FindFirstChild("Placeables")
+if(dir === undefined)
+{
+    const dir = new Instance("Folder", game.GetService("ReplicatedStorage"))
+    dir.Name = "Placeables"
+    helper = new NodeHelper(dir)
+}
+else
+{
+    helper = new NodeHelper(dir as Folder)
+}
 
 const globalConfig = new NodeConfig(100, new Array<number>())
 
@@ -73,7 +82,8 @@ function CreateStructure(args: APIArgs)
     if(reqPlayersNode.success)
     {
         let playersNode = reqPlayersNode.result as Node
-        let requestedPlaceable = args.clientArgs as Placeable
+        let requestedPlaceable = (args.clientArgs as Array<any>)[0] as Placeable
+        let requestedPosition = (args.clientArgs as Array<any>)[1] as CFrame
         let realPlaceable = helper.GetRealFromUntrustedPlaceable(requestedPlaceable)
         if(realPlaceable !== undefined)
         {
@@ -83,8 +93,17 @@ function CreateStructure(args: APIArgs)
                 numberOfThisAlreadyPlaced = playersNode.activePlaceables.filter(x => x.config.name === realPlaceable?.config.name).size()
                 if(numberOfThisAlreadyPlaced < realPlaceable.config.maxOfThisAllowed)
                 {
-                    args.caller.ashlin -= realPlaceable.config.cost
-                    return new APIResult<Placeable>(realPlaceable, "Successfully placed.", true)
+                    if(playersNode.position.sub(requestedPosition.Position).Magnitude <= playersNode.config.radius)
+                    {
+                        args.caller.ashlin -= realPlaceable.config.cost
+                        realPlaceable.attachedModel.Parent = game.GetService("Workspace")
+                        realPlaceable.attachedModel.SetPrimaryPartCFrame(requestedPosition)
+                        return new APIResult<Placeable>(realPlaceable, "Successfully placed.", true)
+                    }
+                    else
+                    {
+                        return new APIResult<any>(undefined, "Invalid location. Placeable must be inside of node.", false)
+                    }
                 }
                 else
                 {
@@ -112,7 +131,8 @@ function GetAllPlaceables(args: APIArgs)
     
     if(reqPlayersNode.success)
     {
-        return new APIResult<Array<Placeable>>(helper.GetAllPossiblePlaceables(reqPlayersNode.result), "Successfully fetched all possible placeables.", true) 
+        let all = helper.GetAllPossiblePlaceables(reqPlayersNode.result)
+        return new APIResult<Array<Placeable>>(all, "Successfully fetched all possible placeables.", true) 
     }
     return reqPlayersNode
 }

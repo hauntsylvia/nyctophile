@@ -19,24 +19,20 @@ do
 		self.buildablesDirectory = buildablesDirectory
 	end
 	function NodeHelper:GetRealPlaceableConfigFromPhysicalConfig(model)
-		local configFolder = model:FindFirstChild("config")
+		local configFolder = model:FindFirstChildWhichIsA("Configuration")
 		if configFolder ~= nil and configFolder:IsA("Configuration") then
-			local placeableConfig = defaultPlaceableConfig
-			local module = configFolder:FindFirstChildWhichIsA("ModuleScript")
-			if module ~= nil then
-				local _condition = (require(module))
-				if _condition == nil then
-					_condition = defaultPlaceableConfig
-				end
-				placeableConfig = _condition
-				return placeableConfig
-			end
+			local placeableConfig = PlaceableConfig.new(0, "", "", 0)
+			placeableConfig.cost = (configFolder:FindFirstChild("Cost")).Value
+			placeableConfig.maxOfThisAllowed = (configFolder:FindFirstChild("MaxAllowed")).Value
+			placeableConfig.description = (configFolder:FindFirstChild("Description")).Value
+			placeableConfig.name = (configFolder:FindFirstChild("Name")).Value
+			return placeableConfig
 		end
 		return defaultPlaceableConfig
 	end
 	function NodeHelper:GetAllPossiblePlaceables(hypotheticalOwner)
-		local placeables = {}
 		local ch = self.buildablesDirectory:GetChildren()
+		local p = {}
 		do
 			local i = 0
 			local _shouldIncrement = false
@@ -51,18 +47,22 @@ do
 				end
 				local thisModel = ch[i + 1]
 				if thisModel:IsA("Model") and thisModel.PrimaryPart ~= nil then
-					local _placeables = placeables
-					local _placeable = Placeable.new(hypotheticalOwner, thisModel, self:GetRealPlaceableConfigFromPhysicalConfig(thisModel))
+					local parsedConfig = self:GetRealPlaceableConfigFromPhysicalConfig(thisModel)
+					local thisPlaceable = Placeable.new(hypotheticalOwner, thisModel, parsedConfig)
+					local _p = p
+					local _thisPlaceable = thisPlaceable
 					-- ▼ Array.push ▼
-					_placeables[#_placeables + 1] = _placeable
+					_p[#_p + 1] = _thisPlaceable
 					-- ▲ Array.push ▲
+				elseif thisModel:IsA("Model") and thisModel.PrimaryPart == nil then
+					print("Placeable " .. (thisModel:GetFullName() .. " does not have PrimaryPart set."))
 				end
 			end
 		end
-		return placeables
+		return p
 	end
-	function NodeHelper:GetRealFromUntrustedPlaceable(placeable)
-		local allP = self:GetAllPossiblePlaceables(placeable.ownerNode)
+	function NodeHelper:GetRealFromUntrustedPlaceable(untrusted)
+		local allP = self:GetAllPossiblePlaceables(untrusted.ownerNode)
 		do
 			local i = 0
 			local _shouldIncrement = false
@@ -76,7 +76,10 @@ do
 					break
 				end
 				local thisP = allP[i + 1]
-				if thisP.attachedModel == placeable.attachedModel then
+				if thisP.config.name == untrusted.config.name then
+					thisP.attachedModel = thisP.attachedModel:Clone()
+					thisP.attachedModel.Name = "_"
+					print(thisP.config.name)
 					return thisP
 				end
 			end
