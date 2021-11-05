@@ -60,7 +60,8 @@ class Database
                         new PlayerKeySettings
                         (
                             "E",
-                            "G"
+                            "G",
+                            "U"
                         )
                     ),
                     new PlayerInventory

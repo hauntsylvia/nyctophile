@@ -7,6 +7,6 @@ local thisService = APIRegister.new("interactables")
 local h = InteractableHelper.new()
 local function GetCurrent(args)
 	local arrayOfInteractables = h:GetInteractablesOfPlayerByUserId(args.caller.userId)
-	return APIResult.new(arrayOfInteractables, "")
+	return APIResult.new(arrayOfInteractables, "Succesfully returned all user's interactables.", true)
 end
 thisService:RegisterNewLowerService("getcurrent").OnInvoke = GetCurrent

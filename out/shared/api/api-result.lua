@@ -11,9 +11,10 @@ do
 		local self = setmetatable({}, APIResult)
 		return self:constructor(...) or self
 	end
-	function APIResult:constructor(result, message)
+	function APIResult:constructor(result, message, success)
 		self.result = result
 		self.message = message
+		self.success = success
 	end
 end
 return {

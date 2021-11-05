@@ -59,10 +59,10 @@ apiHandler.OnServerInvoke = function(user, _upperServiceName, _lowerServiceName,
 			local result = currentTarget:Invoke(apiArgs)
 			return TS.TRY_RETURN, { result }
 		else
-			return TS.TRY_RETURN, { APIResult.new(nil, "Service not found.") }
+			return TS.TRY_RETURN, { APIResult.new(nil, "Service not found.", false) }
 		end
 	end, function()
-		return TS.TRY_RETURN, { APIResult.new(nil, "Malformed client data or internal server failure.") }
+		return TS.TRY_RETURN, { APIResult.new(nil, "Malformed client data or internal server failure.", false) }
 	end)
 	if _exitType then
 		return unpack(_returns)

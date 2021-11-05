@@ -13,7 +13,7 @@ const h = new InteractableHelper()
 function GetCurrent(args: APIArgs)
 {
     let arrayOfInteractables = h.GetInteractablesOfPlayerByUserId(args.caller.userId)
-    return new APIResult<Array<Interactable>>(arrayOfInteractables, "")
+    return new APIResult<Array<Interactable>>(arrayOfInteractables, "Succesfully returned all user's interactables.", true)
 }
 
 thisService.RegisterNewLowerService("getcurrent").OnInvoke = GetCurrent

@@ -5,7 +5,7 @@ local APIResult = TS.import(script, game:GetService("ReplicatedStorage"), "TS", 
 local thisService = APIRegister.new("users")
 local function GetSelf(args)
 	print("get self")
-	return APIResult.new(args.caller, "")
+	return APIResult.new(args.caller, "", true)
 end
 local function GetPlayerRotations(args)
 end

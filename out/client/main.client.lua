@@ -1,8 +1,10 @@
 -- Compiled with roblox-ts v1.2.7
 local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
-local Draw = TS.import(script, script.Parent, "modules", "interactable-draw").Draw
+local BuildSystem = TS.import(script, script.Parent, "modules", "helpers", "build-system").BuildSystem
+local Draw = TS.import(script, script.Parent, "modules", "helpers", "interactable-draw").Draw
 local Client = TS.import(script, script.Parent, "modules", "net", "lib").Client
 local lib = Client.new()
+local buildSystem = BuildSystem.new(lib)
 local draws = {}
 local plr = game:GetService("Players").LocalPlayer
 local me = lib:GetMe()
@@ -90,22 +92,35 @@ runService.Heartbeat:Connect(function(deltaTime)
 	end
 end)
 userInputService.InputEnded:Connect(function(inputObject, isProcessed)
-	local _condition = not isProcessed
-	if _condition then
-		local _result = me
-		if _result ~= nil then
-			_result = _result.playerSettings.playerKeys.interactKey
+	if not isProcessed and me ~= nil then
+		local keySettings = me.playerSettings.playerKeys
+		if inputObject.KeyCode.Name == keySettings.interactKey and (closestDraw ~= nil and closestDraw:IsInRange(plr)) then
+			closestDraw:Interact()
+		elseif inputObject.KeyCode.Name == keySettings.buildSystemKey then
+			local selfNode = lib:GetNode()
+			if not buildSystem.isEnabled then
+				if selfNode ~= nil then
+					local larry = lib:GetAllPossiblePlaceables()
+					if larry ~= nil then
+						local thisModel = larry[1].attachedModel:Clone()
+						thisModel.Parent = game:GetService("Workspace")
+						buildSystem:Enable(thisModel, Enum.UserInputType.MouseButton1, inputObject.KeyCode, false, selfNode)
+					end
+				else
+					local nodeModel = Instance.new("Model", game:GetService("Workspace"))
+					nodeModel.Name = "temp-node-model"
+					local nodePart = Instance.new("Part", nodeModel)
+					nodePart.Name = "temp-node-part"
+					nodeModel.PrimaryPart = nodePart
+					buildSystem:Enable(nodeModel, Enum.UserInputType.MouseButton1, inputObject.KeyCode, false)
+				end
+			else
+				buildSystem:Disable()
+			end
 		end
-		_condition = _result == inputObject.KeyCode.Name
-		if _condition then
-			_condition = closestDraw ~= nil and closestDraw:IsInRange(plr)
-		end
-	end
-	if _condition then
-		closestDraw:Interact()
 	end
 end)
 EvaluateInteractables()
-while { wait(5) } do
+while { wait(30) } do
 	EvaluateInteractables()
 end

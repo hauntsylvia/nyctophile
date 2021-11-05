@@ -10,7 +10,7 @@ const thisService = new APIRegister("users")
 function GetSelf(args: APIArgs)
 {
     print("get self")
-    return new APIResult<PlayerState>(args.caller, "")
+    return new APIResult<PlayerState>(args.caller, "", true)
 }
 function GetPlayerRotations(args: APIArgs)
 {

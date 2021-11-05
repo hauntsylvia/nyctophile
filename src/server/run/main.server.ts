@@ -53,12 +53,12 @@ apiHandler.OnServerInvoke = function(user, _upperServiceName, _lowerServiceName,
         }
         else
         {
-            return new APIResult<unknown>(undefined, "Service not found.")
+            return new APIResult<unknown>(undefined, "Service not found.", false)
         }
     }
     catch
     {
-        return new APIResult<unknown>(undefined, "Malformed client data or internal server failure.")
+        return new APIResult<unknown>(undefined, "Malformed client data or internal server failure.", false)
     }
 }
 

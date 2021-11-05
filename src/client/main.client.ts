@@ -1,14 +1,18 @@
 import { Interactable } from "shared/entities/interactable";
-import { Draw } from "./modules/interactable-draw";
+import { Node } from "shared/entities/node/node";
+import { BuildSystem } from "./modules/helpers/build-system";
+import { Draw } from "./modules/helpers/interactable-draw";
 import { Client } from "./modules/net/lib";
 
 const lib = new Client()
+const buildSystem = new BuildSystem(lib)
+
 let draws = new Array<Draw>()
 let plr = game.GetService("Players").LocalPlayer
 let me = lib.GetMe()
 
-let runService = game.GetService("RunService")
-let userInputService = game.GetService("UserInputService")
+const runService = game.GetService("RunService")
+const userInputService = game.GetService("UserInputService")
 
 function EvaluateInteractables()
 {
@@ -69,13 +73,47 @@ runService.Heartbeat.Connect(function(deltaTime)
 })
 userInputService.InputEnded.Connect(function(inputObject, isProcessed)
 {
-    if(!isProcessed && me?.playerSettings.playerKeys.interactKey === inputObject.KeyCode.Name && closestDraw !== undefined && closestDraw.IsInRange(plr))
+    if(!isProcessed && me !== undefined)
     {
-        closestDraw.Interact()
+        let keySettings = me.playerSettings.playerKeys
+        if(inputObject.KeyCode.Name === keySettings.interactKey && closestDraw !== undefined && closestDraw.IsInRange(plr))
+        {
+            closestDraw.Interact()
+        }
+        else if(inputObject.KeyCode.Name === keySettings.buildSystemKey)
+        {
+            let selfNode = lib.GetNode()
+            if(!buildSystem.isEnabled)
+            {
+                if(selfNode !== undefined)
+                {
+                    let larry = lib.GetAllPossiblePlaceables()
+                    if(larry !== undefined)
+                    {
+                        let thisModel = larry[0].attachedModel.Clone()
+                        thisModel.Parent = game.GetService("Workspace")
+                        buildSystem.Enable(thisModel, Enum.UserInputType.MouseButton1, inputObject.KeyCode, false, selfNode)
+                    }
+                }
+                else
+                {
+                    let nodeModel = new Instance("Model", game.GetService("Workspace"))
+                    nodeModel.Name = "temp-node-model"
+                    let nodePart = new Instance("Part", nodeModel)
+                    nodePart.Name = "temp-node-part"
+                    nodeModel.PrimaryPart = nodePart
+                    buildSystem.Enable(nodeModel, Enum.UserInputType.MouseButton1, inputObject.KeyCode, false)
+                }
+            }
+            else
+            {
+                buildSystem.Disable()
+            }
+        }
     }
 })
 EvaluateInteractables()
-while(wait(5))
+while(wait(30))
 {
     EvaluateInteractables()
 }

@@ -1,5 +1,4 @@
 -- Compiled with roblox-ts v1.2.7
-local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
 local InternalClient
 local Client
 do
@@ -28,6 +27,26 @@ do
 		local ints = self.client:Send("interactables", "getcurrent", nil)
 		return ints
 	end
+	function Client:PlaceNode(position)
+		local n = self.client:Send("nodes", "create", position)
+		return n
+	end
+	function Client:GetNode()
+		local n = self.client:Send("nodes", "me", nil)
+		return n
+	end
+	function Client:GetAllOtherPlayersNodes()
+		local n = self.client:Send("nodes", "all", nil)
+		return n
+	end
+	function Client:PlacePlaceable(placeable)
+		local n = self.client:Send("nodes", "placeables.create", placeable)
+		return n
+	end
+	function Client:GetAllPossiblePlaceables()
+		local n = self.client:Send("nodes", "placeables.all", nil)
+		return n
+	end
 end
 do
 	InternalClient = setmetatable({}, {
@@ -43,20 +62,15 @@ do
 	function InternalClient:constructor()
 	end
 	function InternalClient:Send(lower, upper, args)
-		local _exitType, _returns = TS.try(function()
-			local myEvents = game:GetService("ReplicatedStorage"):WaitForChild("player")
-			local serversEvent = game:GetService("ReplicatedStorage"):WaitForChild("api"):WaitForChild("func")
-			if serversEvent:IsA("RemoteFunction") then
-				local result = serversEvent:InvokeServer(lower, upper, args)
-				return TS.TRY_RETURN, { result.result }
+		local myEvents = game:GetService("ReplicatedStorage"):WaitForChild("player")
+		local serversEvent = game:GetService("ReplicatedStorage"):WaitForChild("api"):WaitForChild("func")
+		if serversEvent:IsA("RemoteFunction") then
+			local result = serversEvent:InvokeServer(lower, upper, args)
+			if not result.success then
+				print("- - " .. (result.message .. " - -"))
 			end
-		end, function()
-			return TS.TRY_RETURN, { nil }
-		end)
-		if _exitType then
-			return unpack(_returns)
+			return result.result
 		end
-		return nil
 	end
 end
 return {

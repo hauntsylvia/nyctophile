@@ -1,5 +1,7 @@
 import { APIResult } from "shared/api/api-result"
 import { Interactable } from "shared/entities/interactable"
+import { Node } from "shared/entities/node/node"
+import { Placeable } from "shared/entities/node/placeable"
 import { PlayerState } from "shared/entities/player/player-state"
 
 class Client
@@ -24,27 +26,48 @@ class Client
         let ints = this.client.Send<Array<Interactable>>("interactables", "getcurrent", undefined)
         return ints
     }
+    PlaceNode(position: Vector3)
+    {
+        let n = this.client.Send<Node>("nodes", "create", position)
+        return n
+    }
+    GetNode()
+    {
+        let n = this.client.Send<Node>("nodes", "me", undefined)
+        return n
+    }
+    GetAllOtherPlayersNodes()
+    {
+        let n = this.client.Send<Array< Partial<Node> >>("nodes", "all", undefined)
+        return n
+    }
+    PlacePlaceable(placeable: Placeable)
+    {
+        let n = this.client.Send<Array<Placeable>>("nodes", "placeables.create", placeable)
+        return n
+    }
+    GetAllPossiblePlaceables()
+    {
+        let n = this.client.Send<Array<Placeable>>("nodes", "placeables.all", undefined)
+        return n
+    }
 }
 
 class InternalClient
 {
     Send<T>(lower: string, upper: string, args: any)
     {
-        try
+        let myEvents = game.GetService("ReplicatedStorage").WaitForChild("player")
+        let serversEvent = game.GetService("ReplicatedStorage").WaitForChild("api").WaitForChild("func")
+        if(serversEvent.IsA("RemoteFunction"))
         {
-            let myEvents = game.GetService("ReplicatedStorage").WaitForChild("player")
-            let serversEvent = game.GetService("ReplicatedStorage").WaitForChild("api").WaitForChild("func")
-            if(serversEvent.IsA("RemoteFunction"))
+            let result = serversEvent.InvokeServer(lower, upper, args) as APIResult<T>
+            if(!result.success)
             {
-                let result = serversEvent.InvokeServer(lower, upper, args) as APIResult<T>
-                return result.result
+                print(`- - ${result.message} - -`)
             }
+            return result.result
         }
-        catch
-        {
-            return undefined
-        }
-        return undefined
     }
 }
 export { Client }

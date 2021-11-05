@@ -69,7 +69,7 @@ do
 			end
 			player = _condition
 			if player == nil then
-				player = PlayerState.new(user.UserId, 500, PlayerCard.new(0, "new"), PlayerSettings.new(PlayerKeySettings.new("E", "G")), PlayerInventory.new(5))
+				player = PlayerState.new(user.UserId, 500, PlayerCard.new(0, "new"), PlayerSettings.new(PlayerKeySettings.new("E", "G", "U")), PlayerInventory.new(5))
 			end
 			local _player = player
 			-- ▼ Array.push ▼

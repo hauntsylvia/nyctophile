@@ -1,6 +1,6 @@
 import { APIResult } from "shared/api/api-result";
 import { Interactable } from "shared/entities/interactable";
-import { Client } from "./net/lib";
+import { Client } from "../net/lib";
 
 const tweenService = game.GetService("TweenService")
 
