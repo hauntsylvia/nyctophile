@@ -3,10 +3,14 @@ local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_incl
 local Node = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "node", "node").Node
 local NodeConfig = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "node", "node-config").NodeConfig
 local Placeable = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "node", "placeable").Placeable
-local PlaceableConfig = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "node", "placeable-config").PlaceableConfig
+local _placeable_config = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "node", "placeable-config")
+local PlaceableCategories = _placeable_config.PlaceableCategories
+local PlaceableConfig = _placeable_config.PlaceableConfig
 local BuildSystem = TS.import(script, script.Parent, "modules", "helpers", "build-system").BuildSystem
 local Draw = TS.import(script, script.Parent, "modules", "helpers", "interactable-draw").Draw
 local Client = TS.import(script, script.Parent, "modules", "net", "lib").Client
+local ColorPicker = TS.import(script, script.Parent, "modules", "ui", "color-picker").ColorPicker
+local MaterialPicker = TS.import(script, script.Parent, "modules", "ui", "material-picker").MaterialPicker
 local lib = Client.new()
 local draws = {}
 local plr = game:GetService("Players").LocalPlayer
@@ -98,7 +102,8 @@ runService.Heartbeat:Connect(function(deltaTime)
 		end
 	end
 end)
-local isInBuildUI = false
+local lastColorPicker
+local lastMatPicker
 userInputService.InputEnded:Connect(function(inputObject, isProcessed)
 	if not isProcessed and me ~= nil then
 		local keySettings = me.playerSettings.playerKeys
@@ -113,14 +118,19 @@ userInputService.InputEnded:Connect(function(inputObject, isProcessed)
 			node = selfNode
 			if not buildSystem.isEnabled then
 				if selfNode ~= nil then
-					local _scrollFrame = buildUI:FindFirstChild("Screen")
-					if _scrollFrame ~= nil then
-						_scrollFrame = _scrollFrame:FindFirstChild("Placeables")
-						if _scrollFrame ~= nil then
-							_scrollFrame = _scrollFrame:FindFirstChild("Placeables")
+					local _result = buildUI:FindFirstChild("Screen")
+					if _result ~= nil then
+						_result = _result:FindFirstChild("Customization")
+					end
+					local customizeableFrame = _result
+					local _result_1 = buildUI:FindFirstChild("Screen")
+					if _result_1 ~= nil then
+						_result_1 = _result_1:FindFirstChild("Placeables")
+						if _result_1 ~= nil then
+							_result_1 = _result_1:FindFirstChild("Placeables")
 						end
 					end
-					local scrollFrame = _scrollFrame
+					local scrollFrame = _result_1
 					local _children = scrollFrame
 					if _children ~= nil then
 						_children = _children:GetChildren()
@@ -160,14 +170,14 @@ userInputService.InputEnded:Connect(function(inputObject, isProcessed)
 								if not (i < #larry) then
 									break
 								end
-								local _result = scrollFrame
-								if _result ~= nil then
-									_result = _result:FindFirstChild("A")
-									if _result ~= nil then
-										_result = _result:Clone()
+								local _result_2 = scrollFrame
+								if _result_2 ~= nil then
+									_result_2 = _result_2:FindFirstChild("A")
+									if _result_2 ~= nil then
+										_result_2 = _result_2:Clone()
 									end
 								end
-								local placementUIFrame = _result
+								local placementUIFrame = _result_2
 								placementUIFrame.Parent = scrollFrame
 								placementUIFrame.Visible = true
 								placementUIFrame.Name = "_"
@@ -181,7 +191,37 @@ userInputService.InputEnded:Connect(function(inputObject, isProcessed)
 								b.MouseButton1Up:Connect(function()
 									if larry ~= nil and #larry > 0 then
 										buildSystem:Disable()
-										buildSystem:Enable(larry[i + 1], Enum.UserInputType.MouseButton1, nil, selfNode)
+										buildSystem:Enable(larry[i + 1], nil, nil, selfNode)
+										local _condition_1 = lastColorPicker
+										if _condition_1 == nil then
+											_condition_1 = ColorPicker.new(customizeableFrame:FindFirstChild("ColorPicker"))
+										end
+										lastColorPicker = _condition_1
+										local _condition_2 = lastMatPicker
+										if _condition_2 == nil then
+											_condition_2 = MaterialPicker.new(customizeableFrame:FindFirstChild("MaterialPicker"))
+										end
+										lastMatPicker = _condition_2
+										local uisEv
+										uisEv = userInputService.InputBegan:Connect(function(inputObj, isProcessed)
+											if not isProcessed and (inputObj.UserInputType == Enum.UserInputType.MouseButton1 and (larry ~= nil and (lastColorPicker ~= nil and lastMatPicker ~= nil))) then
+												local ar = {}
+												local _ar = ar
+												local _arg0 = larry[i + 1]
+												local _actualResult = buildSystem.actualResult
+												-- ▼ Array.push ▼
+												local _length = #_ar
+												_ar[_length + 1] = _arg0
+												_ar[_length + 2] = _actualResult
+												-- ▲ Array.push ▲
+												local placeable = lib:PlacePlaceable(ar)
+												if placeable ~= nil then
+													buildSystem:Disable()
+													lib:CustomizePlaceable(placeable.id, lastColorPicker.selectedColor, lastMatPicker.selectedMat)
+													uisEv:Disconnect()
+												end
+											end
+										end)
 									else
 										print("No placeables.")
 									end
@@ -192,7 +232,7 @@ userInputService.InputEnded:Connect(function(inputObject, isProcessed)
 					end
 				else
 					local acceptInpType = Enum.UserInputType.MouseButton1
-					buildSystem:Enable(Placeable.new(Node.new(me.userId, Vector3.new(0, 0, 0), NodeConfig.new(0, {})), buildSystem:MakeNodeRepresentation(), PlaceableConfig.new(1, "", "", 0)), acceptInpType)
+					buildSystem:Enable(Placeable.new(Node.new(me.userId, Vector3.new(0, 0, 0), NodeConfig.new(0, {})), buildSystem:MakeNodeRepresentation(), PlaceableConfig.new(1, "", "", 0, PlaceableCategories.Misc), 0), acceptInpType)
 				end
 			else
 				buildSystem:Disable()

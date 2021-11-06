@@ -1,8 +1,10 @@
 -- Compiled with roblox-ts v1.2.7
 local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
 local Placeable = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "node", "placeable").Placeable
-local PlaceableConfig = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "node", "placeable-config").PlaceableConfig
-local defaultPlaceableConfig = PlaceableConfig.new(10, "Placeable", "A generic placeable.", 5)
+local _placeable_config = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "node", "placeable-config")
+local PlaceableCategories = _placeable_config.PlaceableCategories
+local PlaceableConfig = _placeable_config.PlaceableConfig
+local defaultPlaceableConfig = PlaceableConfig.new(10, "Placeable", "A generic placeable.", 5, PlaceableCategories.Misc)
 local NodeHelper
 do
 	NodeHelper = setmetatable({}, {
@@ -19,14 +21,17 @@ do
 		self.buildablesDirectory = buildablesDirectory
 	end
 	function NodeHelper:GetRealPlaceableConfigFromPhysicalConfig(model)
-		local configFolder = model:FindFirstChildWhichIsA("Configuration")
-		if configFolder ~= nil and configFolder:IsA("Configuration") then
-			local placeableConfig = PlaceableConfig.new(0, "", "", 0)
-			placeableConfig.cost = (configFolder:FindFirstChild("Cost")).Value
-			placeableConfig.maxOfThisAllowed = (configFolder:FindFirstChild("MaxAllowed")).Value
-			placeableConfig.description = (configFolder:FindFirstChild("Description")).Value
-			placeableConfig.name = (configFolder:FindFirstChild("Name")).Value
-			return placeableConfig
+		local fullConfigFolder = model:FindFirstChildWhichIsA("Configuration")
+		if fullConfigFolder ~= nil and fullConfigFolder:IsA("Configuration") then
+			local configFolder = fullConfigFolder:WaitForChild("Placeable")
+			if configFolder ~= nil and configFolder:IsA("Configuration") then
+				local placeableConfig = PlaceableConfig.new(defaultPlaceableConfig.cost, defaultPlaceableConfig.name, defaultPlaceableConfig.description, defaultPlaceableConfig.maxOfThisAllowed, defaultPlaceableConfig.placeableCategory)
+				placeableConfig.cost = (configFolder:FindFirstChild("Cost")).Value
+				placeableConfig.maxOfThisAllowed = (configFolder:FindFirstChild("MaxAllowed")).Value
+				placeableConfig.description = (configFolder:FindFirstChild("Description")).Value
+				placeableConfig.name = (configFolder:FindFirstChild("Name")).Value
+				return placeableConfig
+			end
 		end
 		return defaultPlaceableConfig
 	end
@@ -48,7 +53,7 @@ do
 				local thisModel = ch[i + 1]
 				if thisModel:IsA("Model") and thisModel.PrimaryPart ~= nil then
 					local parsedConfig = self:GetRealPlaceableConfigFromPhysicalConfig(thisModel)
-					local thisPlaceable = Placeable.new(hypotheticalOwner, thisModel, parsedConfig)
+					local thisPlaceable = Placeable.new(hypotheticalOwner, thisModel, parsedConfig, tick())
 					local _p = p
 					local _thisPlaceable = thisPlaceable
 					-- ▼ Array.push ▼
@@ -79,7 +84,6 @@ do
 				if thisP.config.name == untrusted.config.name then
 					thisP.attachedModel = thisP.attachedModel:Clone()
 					thisP.attachedModel.Name = "_"
-					print(thisP.config.name)
 					return thisP
 				end
 			end

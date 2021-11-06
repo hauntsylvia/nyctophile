@@ -1,8 +1,8 @@
 import { Node } from "shared/entities/node/node"
 import { Placeable } from "shared/entities/node/placeable"
-import { PlaceableConfig } from "shared/entities/node/placeable-config"
+import { PlaceableCategories, PlaceableConfig } from "shared/entities/node/placeable-config"
 
-const defaultPlaceableConfig = new PlaceableConfig(10, "Placeable", "A generic placeable.", 5)
+const defaultPlaceableConfig = new PlaceableConfig(10, "Placeable", "A generic placeable.", 5, PlaceableCategories.Misc)
 
 class NodeHelper
 {
@@ -13,15 +13,26 @@ class NodeHelper
     }
     private GetRealPlaceableConfigFromPhysicalConfig(model: Model)
     {
-        let configFolder = model.FindFirstChildWhichIsA("Configuration")
-        if(configFolder !== undefined && configFolder.IsA("Configuration"))
+        let fullConfigFolder = model.FindFirstChildWhichIsA("Configuration")
+        if(fullConfigFolder !== undefined && fullConfigFolder.IsA("Configuration"))
         {
-            let placeableConfig: PlaceableConfig = new PlaceableConfig(0, "", "", 0)
-            placeableConfig.cost = (configFolder.FindFirstChild("Cost") as NumberValue).Value
-            placeableConfig.maxOfThisAllowed = (configFolder.FindFirstChild("MaxAllowed") as NumberValue).Value
-            placeableConfig.description = (configFolder.FindFirstChild("Description") as StringValue).Value
-            placeableConfig.name = (configFolder.FindFirstChild("Name") as StringValue).Value
-            return placeableConfig
+            let configFolder = fullConfigFolder.WaitForChild("Placeable")
+            if(configFolder !== undefined && configFolder.IsA("Configuration"))
+            {
+                let placeableConfig: PlaceableConfig = new PlaceableConfig
+                (
+                    defaultPlaceableConfig.cost, 
+                    defaultPlaceableConfig.name,
+                    defaultPlaceableConfig.description, 
+                    defaultPlaceableConfig.maxOfThisAllowed, 
+                    defaultPlaceableConfig.placeableCategory
+                )
+                placeableConfig.cost = (configFolder.FindFirstChild("Cost") as NumberValue).Value
+                placeableConfig.maxOfThisAllowed = (configFolder.FindFirstChild("MaxAllowed") as NumberValue).Value
+                placeableConfig.description = (configFolder.FindFirstChild("Description") as StringValue).Value
+                placeableConfig.name = (configFolder.FindFirstChild("Name") as StringValue).Value
+                return placeableConfig
+            }
         }
         return defaultPlaceableConfig
     }
@@ -35,7 +46,7 @@ class NodeHelper
             if(thisModel.IsA("Model") && thisModel.PrimaryPart !== undefined)
             {
                 let parsedConfig = this.GetRealPlaceableConfigFromPhysicalConfig(thisModel)
-                let thisPlaceable = new Placeable(hypotheticalOwner, thisModel, parsedConfig)
+                let thisPlaceable = new Placeable(hypotheticalOwner, thisModel, parsedConfig, tick())
                 p.push((thisPlaceable))
             }
             else if(thisModel.IsA("Model") && thisModel.PrimaryPart === undefined)
@@ -55,7 +66,6 @@ class NodeHelper
             {
                 thisP.attachedModel = thisP.attachedModel.Clone()
                 thisP.attachedModel.Name = "_"
-                print(thisP.config.name)
                 return thisP
             }
         }

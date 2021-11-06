@@ -47,6 +47,14 @@ do
 		local n = self.client:Send("nodes", "placeables.all", nil)
 		return n
 	end
+	function Client:CustomizePlaceable(placeableId, color, material)
+		local toSend = table.create(3)
+		toSend[1] = placeableId
+		toSend[2] = color
+		toSend[3] = material
+		local n = self.client:Send("nodes", "placeables.customize", toSend)
+		return n
+	end
 end
 do
 	InternalClient = setmetatable({}, {

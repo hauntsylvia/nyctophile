@@ -43,12 +43,21 @@ class Client
     }
     PlacePlaceable(ar: Array<any>)
     {
-        let n = this.client.Send<Array<Placeable>>("nodes", "placeables.create", ar)
+        let n = this.client.Send<Placeable>("nodes", "placeables.create", ar)
         return n
     }
     GetAllPossiblePlaceables()
     {
         let n = this.client.Send<Array<Placeable>>("nodes", "placeables.all", undefined)
+        return n
+    }
+    CustomizePlaceable(placeableId: number, color?: Color3, material?: Enum.Material)
+    {
+        let toSend = new Array<any>(3)
+        toSend[0] = placeableId
+        toSend[1] = color
+        toSend[2] = material
+        let n = this.client.Send<Placeable>("nodes", "placeables.customize", toSend)
         return n
     }
 }

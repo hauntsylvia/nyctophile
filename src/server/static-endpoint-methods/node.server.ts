@@ -9,8 +9,6 @@ import { NodeConfig } from "shared/entities/node/node-config"
 import { Placeable } from "shared/entities/node/placeable"
 import { NodeHelper } from "server/modules/helpers/node-helper"
 
-const thisService = new APIRegister("nodes")
-const nodes = new Array<Node>()
 let helper: NodeHelper
 
 let dir = game.GetService("ReplicatedStorage").FindFirstChild("Placeables")
@@ -26,6 +24,9 @@ else
 }
 
 const globalConfig = new NodeConfig(100, new Array<number>())
+const thisService = new APIRegister("nodes")
+const nodes = new Array<Node>()
+const tweenService = game.GetService("TweenService")
 
 game.GetService("Players").PlayerRemoving.Connect(function(user)
 {
@@ -76,7 +77,7 @@ function GetSelfNode(args: APIArgs)
     }
     return new APIResult<any>(undefined, "Node not found.", false)
 }
-function CreateStructure(args: APIArgs)
+function CreatePlaceable(args: APIArgs)
 {
     let reqPlayersNode = GetSelfNode(args)
     if(reqPlayersNode.success)
@@ -98,6 +99,7 @@ function CreateStructure(args: APIArgs)
                         args.caller.ashlin -= realPlaceable.config.cost
                         realPlaceable.attachedModel.Parent = game.GetService("Workspace")
                         realPlaceable.attachedModel.SetPrimaryPartCFrame(requestedPosition)
+                        playersNode.activePlaceables.push(realPlaceable)
                         return new APIResult<Placeable>(realPlaceable, "Successfully placed.", true)
                     }
                     else
@@ -136,9 +138,62 @@ function GetAllPlaceables(args: APIArgs)
     }
     return reqPlayersNode
 }
+function CustomizeExistingPlaceable(args: APIArgs)
+{
+    let reqPlayersNode = GetSelfNode(args)
+
+    let usersArgs =             args.clientArgs as Array<unknown>
+    let requestedPlaceableId =  usersArgs[0] as number
+    let color: Color3 | undefined = typeOf(usersArgs[1]) !== undefined ? usersArgs[1] as Color3 : undefined
+    let material: Enum.Material | undefined = typeOf(usersArgs[2]) !== undefined ? usersArgs[2] as Enum.Material : undefined
+
+    let thisPlaceable: Placeable | undefined
+    let playersNode = reqPlayersNode.result as Node | undefined
+    if(playersNode !== undefined)
+    { // search players own node first, as this is more likely
+        let p = playersNode as Node
+        let placeableCustomizing = p.activePlaceables.filter(x => x.id === requestedPlaceableId)
+        thisPlaceable = placeableCustomizing.size() > 0 ? placeableCustomizing[0] : undefined
+    }
+    if(thisPlaceable === undefined)
+    { // search all nodes - if user is trusted and placeable id is found, return placeable of id
+        for(let i = 0; i < nodes.size(); i++)
+        {
+            if(nodes[i].config.trustedUsers.filter(x => x === args.caller.userId).size() > 0)
+            {
+                let a = nodes[i].activePlaceables.filter(x => x.id === requestedPlaceableId)
+                if(a.size() > 0)
+                {
+                    thisPlaceable = a[0]
+                }
+            }
+        }
+    }
+    if(thisPlaceable !== undefined)
+    {
+        let custParts = thisPlaceable.GetCustomizeableParts()
+        custParts.forEach(part =>
+            {
+                if(color !== undefined)
+                {
+                    tweenService.Create(part, new TweenInfo(0.2), {Color: color}).Play()
+                }
+                if(material !== undefined)
+                {
+                    part.Material = material
+                }
+            })
+        return new APIResult<Placeable>(thisPlaceable, "Successfully customized placeable.", true)
+    }
+    else
+    {
+        return new APIResult<any>(undefined, "No matching placeable found.", false)
+    }
+}
 
 thisService.RegisterNewLowerService("create").OnInvoke = PlaceNode
 thisService.RegisterNewLowerService("all").OnInvoke = GetAllNodes
 thisService.RegisterNewLowerService("me").OnInvoke = GetSelfNode
-thisService.RegisterNewLowerService("placeables.create").OnInvoke = CreateStructure
+thisService.RegisterNewLowerService("placeables.create").OnInvoke = CreatePlaceable
 thisService.RegisterNewLowerService("placeables.all").OnInvoke = GetAllPlaceables
+thisService.RegisterNewLowerService("placeables.customize").OnInvoke = CustomizeExistingPlaceable

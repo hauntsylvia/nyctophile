@@ -14,6 +14,7 @@ do
 	end
 	function BuildSystem:constructor(client)
 		self.isEnabled = false
+		self.actualResult = CFrame.new(0, 0, 0)
 		self.allRenderedNodes = {}
 		self.client = client
 	end
@@ -94,13 +95,11 @@ do
 						else
 							local ar = {}
 							local _ar = ar
-							local _cFrame = CFrame.new(actualPosition)
-							local _actualRotation = actualRotation
+							local _actualResult = s.actualResult
 							-- ▼ Array.push ▼
-							local _arg1 = (_cFrame * _actualRotation)
 							local _length = #_ar
 							_ar[_length + 1] = placeable
-							_ar[_length + 2] = _arg1
+							_ar[_length + 2] = _actualResult
 							-- ▲ Array.push ▲
 							s.client:PlacePlaceable(ar)
 							s:Disable()
@@ -274,6 +273,9 @@ do
 							local _cFrame = CFrame.new(actualPosition)
 							local _actualRotation = actualRotation
 							local fakePosition = _fn:Lerp(_cFrame * _actualRotation, 0.2)
+							local _cFrame_1 = CFrame.new(actualPosition)
+							local _actualRotation_1 = actualRotation
+							s.actualResult = (_cFrame_1 * _actualRotation_1)
 							s.attachedModel:SetPrimaryPartCFrame(fakePosition)
 						end
 					elseif s.attachedModel.PrimaryPart == nil then

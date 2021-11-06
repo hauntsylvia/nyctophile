@@ -42,6 +42,7 @@ class BuildSystem
     }
     client: Client
     isEnabled: boolean = false
+    actualResult: CFrame = new CFrame(0, 0, 0)
     private allRenderedNodes: Array<Model> = new Array<Model>()
     private attachedModel: Model | undefined
     private connection: RBXScriptConnection | undefined
@@ -92,7 +93,7 @@ class BuildSystem
                         else
                         {
                             let ar = new Array<any>()
-                            ar.push(placeable, (new CFrame(actualPosition).mul(actualRotation)))
+                            ar.push(placeable, s.actualResult)
                             s.client.PlacePlaceable(ar)
                             s.Disable()
                         }
@@ -208,6 +209,7 @@ class BuildSystem
                                 }
                             }
                             let fakePosition = s.attachedModel.PrimaryPart.CFrame.Lerp(new CFrame(actualPosition).mul(actualRotation), 0.2)
+                            s.actualResult = (new CFrame(actualPosition).mul(actualRotation))
                             s.attachedModel.SetPrimaryPartCFrame(fakePosition)
                         }
                     }

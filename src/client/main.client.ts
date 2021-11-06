@@ -2,10 +2,12 @@ import { Interactable } from "shared/entities/interactable";
 import { Node } from "shared/entities/node/node";
 import { NodeConfig } from "shared/entities/node/node-config";
 import { Placeable } from "shared/entities/node/placeable";
-import { PlaceableConfig } from "shared/entities/node/placeable-config";
+import { PlaceableCategories, PlaceableConfig } from "shared/entities/node/placeable-config";
 import { BuildSystem } from "./modules/helpers/build-system";
 import { Draw } from "./modules/helpers/interactable-draw";
 import { Client } from "./modules/net/lib";
+import { ColorPicker } from "./modules/ui/color-picker";
+import { MaterialPicker } from "./modules/ui/material-picker";
 
 const lib = new Client()
 
@@ -78,7 +80,8 @@ runService.Heartbeat.Connect(function(deltaTime)
         }
     }
 })
-let isInBuildUI: boolean = false
+let lastColorPicker: ColorPicker | undefined
+let lastMatPicker: MaterialPicker | undefined
 userInputService.InputEnded.Connect(function(inputObject, isProcessed)
 {
     if(!isProcessed && me !== undefined)
@@ -96,7 +99,8 @@ userInputService.InputEnded.Connect(function(inputObject, isProcessed)
             {
                 if(selfNode !== undefined)
                 {
-                    let scrollFrame = buildUI.FindFirstChild("Screen")?.FindFirstChild("Placeables")?.FindFirstChild("Placeables")
+                    let customizeableFrame = buildUI.FindFirstChild("Screen")?.FindFirstChild("Customization") as Frame
+                    let scrollFrame = buildUI.FindFirstChild("Screen")?.FindFirstChild("Placeables")?.FindFirstChild("Placeables") as ScrollingFrame
                     let children = scrollFrame?.GetChildren()
                     if(children !== undefined)
                     {
@@ -127,7 +131,24 @@ userInputService.InputEnded.Connect(function(inputObject, isProcessed)
                                 if(larry !== undefined && larry.size() > 0)
                                 {
                                     buildSystem.Disable()
-                                    buildSystem.Enable(larry[i], Enum.UserInputType.MouseButton1, undefined, selfNode)
+                                    buildSystem.Enable(larry[i], undefined, undefined, selfNode)
+                                    lastColorPicker = lastColorPicker ?? new ColorPicker(customizeableFrame.FindFirstChild("ColorPicker") as Frame)
+                                    lastMatPicker = lastMatPicker ?? new MaterialPicker(customizeableFrame.FindFirstChild("MaterialPicker") as Frame)
+                                    let uisEv = userInputService.InputBegan.Connect(function(inputObj, isProcessed)
+                                    {
+                                        if(!isProcessed && inputObj.UserInputType === Enum.UserInputType.MouseButton1 && larry !== undefined && lastColorPicker !== undefined && lastMatPicker !== undefined)
+                                        {
+                                            let ar = new Array<any>()
+                                            ar.push(larry[i], buildSystem.actualResult)
+                                            let placeable = lib.PlacePlaceable(ar)
+                                            if(placeable !== undefined)
+                                            {
+                                                buildSystem.Disable()
+                                                lib.CustomizePlaceable(placeable.id, lastColorPicker.selectedColor, lastMatPicker.selectedMat)
+                                                uisEv.Disconnect()
+                                            }
+                                        }
+                                    })
                                 }
                                 else
                                 {
@@ -139,9 +160,8 @@ userInputService.InputEnded.Connect(function(inputObject, isProcessed)
                 }
                 else
                 {
-                    
                     let acceptInpType = Enum.UserInputType.MouseButton1
-                    buildSystem.Enable(new Placeable(new Node(me.userId, new Vector3(0, 0, 0), new NodeConfig(0, new Array())), buildSystem.MakeNodeRepresentation(), new PlaceableConfig(1, "", "", 0)), acceptInpType)
+                    buildSystem.Enable(new Placeable(new Node(me.userId, new Vector3(0, 0, 0), new NodeConfig(0, new Array())), buildSystem.MakeNodeRepresentation(), new PlaceableConfig(1, "", "", 0, PlaceableCategories.Misc), 0), acceptInpType)
                 }
             }
             else

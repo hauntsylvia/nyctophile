@@ -5,8 +5,6 @@ local APIResult = TS.import(script, game:GetService("ReplicatedStorage"), "TS", 
 local Node = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "node", "node").Node
 local NodeConfig = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "node", "node-config").NodeConfig
 local NodeHelper = TS.import(script, game:GetService("ServerScriptService"), "TS", "modules", "helpers", "node-helper").NodeHelper
-local thisService = APIRegister.new("nodes")
-local nodes = {}
 local helper
 local dir = game:GetService("ReplicatedStorage"):FindFirstChild("Placeables")
 if dir == nil then
@@ -17,6 +15,9 @@ else
 	helper = NodeHelper.new(dir)
 end
 local globalConfig = NodeConfig.new(100, {})
+local thisService = APIRegister.new("nodes")
+local nodes = {}
+local tweenService = game:GetService("TweenService")
 game:GetService("Players").PlayerRemoving:Connect(function(user)
 	do
 		local i = 0
@@ -96,7 +97,7 @@ local function GetSelfNode(args)
 	end
 	return APIResult.new(nil, "Node not found.", false)
 end
-local function CreateStructure(args)
+local function CreatePlaceable(args)
 	local reqPlayersNode = GetSelfNode(args)
 	if reqPlayersNode.success then
 		local playersNode = reqPlayersNode.result
@@ -133,6 +134,11 @@ local function CreateStructure(args)
 						args.caller.ashlin -= realPlaceable.config.cost
 						realPlaceable.attachedModel.Parent = game:GetService("Workspace")
 						realPlaceable.attachedModel:SetPrimaryPartCFrame(requestedPosition)
+						local _activePlaceables_1 = playersNode.activePlaceables
+						local _realPlaceable = realPlaceable
+						-- ▼ Array.push ▼
+						_activePlaceables_1[#_activePlaceables_1 + 1] = _realPlaceable
+						-- ▲ Array.push ▲
 						return APIResult.new(realPlaceable, "Successfully placed.", true)
 					else
 						return APIResult.new(nil, "Invalid location. Placeable must be inside of node.", false)
@@ -158,8 +164,111 @@ local function GetAllPlaceables(args)
 	end
 	return reqPlayersNode
 end
+local function CustomizeExistingPlaceable(args)
+	local reqPlayersNode = GetSelfNode(args)
+	local usersArgs = args.clientArgs
+	local requestedPlaceableId = usersArgs[1]
+	local _arg0 = usersArgs[2]
+	local color = typeof(_arg0) ~= nil and usersArgs[2] or nil
+	local _arg0_1 = usersArgs[3]
+	local material = typeof(_arg0_1) ~= nil and usersArgs[3] or nil
+	local thisPlaceable
+	local playersNode = reqPlayersNode.result
+	if playersNode ~= nil then
+		local p = playersNode
+		local _activePlaceables = p.activePlaceables
+		local _arg0_2 = function(x)
+			return x.id == requestedPlaceableId
+		end
+		-- ▼ ReadonlyArray.filter ▼
+		local _newValue = {}
+		local _length = 0
+		for _k, _v in ipairs(_activePlaceables) do
+			if _arg0_2(_v, _k - 1, _activePlaceables) == true then
+				_length += 1
+				_newValue[_length] = _v
+			end
+		end
+		-- ▲ ReadonlyArray.filter ▲
+		local placeableCustomizing = _newValue
+		thisPlaceable = #placeableCustomizing > 0 and placeableCustomizing[1] or nil
+	end
+	if thisPlaceable == nil then
+		do
+			local i = 0
+			local _shouldIncrement = false
+			while true do
+				if _shouldIncrement then
+					i += 1
+				else
+					_shouldIncrement = true
+				end
+				if not (i < #nodes) then
+					break
+				end
+				local _trustedUsers = nodes[i + 1].config.trustedUsers
+				local _arg0_2 = function(x)
+					return x == args.caller.userId
+				end
+				-- ▼ ReadonlyArray.filter ▼
+				local _newValue = {}
+				local _length = 0
+				for _k, _v in ipairs(_trustedUsers) do
+					if _arg0_2(_v, _k - 1, _trustedUsers) == true then
+						_length += 1
+						_newValue[_length] = _v
+					end
+				end
+				-- ▲ ReadonlyArray.filter ▲
+				if #_newValue > 0 then
+					local _activePlaceables = nodes[i + 1].activePlaceables
+					local _arg0_3 = function(x)
+						return x.id == requestedPlaceableId
+					end
+					-- ▼ ReadonlyArray.filter ▼
+					local _newValue_1 = {}
+					local _length_1 = 0
+					for _k, _v in ipairs(_activePlaceables) do
+						if _arg0_3(_v, _k - 1, _activePlaceables) == true then
+							_length_1 += 1
+							_newValue_1[_length_1] = _v
+						end
+					end
+					-- ▲ ReadonlyArray.filter ▲
+					local a = _newValue_1
+					if #a > 0 then
+						thisPlaceable = a[1]
+					end
+				end
+			end
+		end
+	end
+	if thisPlaceable ~= nil then
+		local custParts = thisPlaceable:GetCustomizeableParts()
+		local _custParts = custParts
+		local _arg0_2 = function(part)
+			if color ~= nil then
+				tweenService:Create(part, TweenInfo.new(0.2), {
+					Color = color,
+				}):Play()
+			end
+			if material ~= nil then
+				part.Material = material
+			end
+		end
+		-- ▼ ReadonlyArray.forEach ▼
+		for _k, _v in ipairs(_custParts) do
+			_arg0_2(_v, _k - 1, _custParts)
+		end
+		-- ▲ ReadonlyArray.forEach ▲
+		return APIResult.new(thisPlaceable, "Successfully customized placeable.", true)
+	else
+		return APIResult.new(nil, "No matching placeable found.", false)
+	end
+end
 thisService:RegisterNewLowerService("create").OnInvoke = PlaceNode
 thisService:RegisterNewLowerService("all").OnInvoke = GetAllNodes
 thisService:RegisterNewLowerService("me").OnInvoke = GetSelfNode
-thisService:RegisterNewLowerService("placeables.create").OnInvoke = CreateStructure
+thisService:RegisterNewLowerService("placeables.create").OnInvoke = CreatePlaceable
 thisService:RegisterNewLowerService("placeables.all").OnInvoke = GetAllPlaceables
+thisService:RegisterNewLowerService("placeables.customize").OnInvoke = CustomizeExistingPlaceable
