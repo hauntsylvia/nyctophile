@@ -9,8 +9,7 @@ function ToPolar(v: Vector2)
 class ColorPicker
 {
     thisFrame: Frame
-    selectedColor: Color3
-    private uisC: RBXScriptConnection | undefined
+    selectedColor: Color3 | undefined
     constructor(parentTo: Frame)
     {
         this.thisFrame = new Instance("Frame")
@@ -21,15 +20,37 @@ class ColorPicker
         this.thisFrame.Size =       new UDim2(0.95, 0, 0.95, 0)
         this.thisFrame.Position =   new UDim2(0.025, 0, 0.025, 0)
         this.thisFrame.Visible = true
-        this.thisFrame.AnchorPoint = new Vector2(0.5, 0.5)
-        this.thisFrame.Position = UDim2.fromScale(0.5, 0.5)
+        
+        let list = new Instance("UIListLayout")
+        list.Parent = this.thisFrame
+        list.HorizontalAlignment = Enum.HorizontalAlignment.Center
+        list.FillDirection = Enum.FillDirection.Horizontal
+        list.Name = "ui list"
+        list.VerticalAlignment = Enum.VerticalAlignment.Center
+        list.Padding = new UDim(0.25, 0)
+
+        let defaultSetter = new Instance("TextButton")
+        defaultSetter.Parent = this.thisFrame
+        defaultSetter.Name = "defaultSetter"
+        defaultSetter.BorderSizePixel = 0
+        defaultSetter.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+        defaultSetter.Text = "Default Color"
+        defaultSetter.TextSize = 18
+        defaultSetter.TextScaled = false
+        defaultSetter.TextXAlignment = Enum.TextXAlignment.Center
+        defaultSetter.TextColor3 = Color3.fromRGB(180, 180, 180)
+        defaultSetter.Size = UDim2.fromScale(0.4, 0.4)
+        defaultSetter.Position = new UDim2(0.025, 0, 0.025, 0)
+        defaultSetter.Visible = true
+        defaultSetter.AnchorPoint = new Vector2(0.5, 0.5)
+        defaultSetter.Position = UDim2.fromScale(0.5, 0.5)
         
         let colorFrame = new Instance("Frame")
         colorFrame.Parent = this.thisFrame
         colorFrame.Name = "color frame"
         colorFrame.BackgroundTransparency = 0
         colorFrame.BorderSizePixel = 0
-        colorFrame.Size = UDim2.fromScale(0.9, 0.9)
+        colorFrame.Size = UDim2.fromScale(0.8, 0.8)
         colorFrame.Position = new UDim2(0.05, 0, 0.05, 0)
         colorFrame.Visible = true
         colorFrame.ClipsDescendants = true
@@ -45,6 +66,8 @@ class ColorPicker
         aspectRatio.Parent = colorFrame
         aspectRatio.AspectRatio = 1
         aspectRatio.Name = "a"
+
+
         
         let picker = new Instance("Frame")
         picker.Parent = colorFrame
@@ -74,8 +97,7 @@ class ColorPicker
         decal.Name = "wheel"
         decal.Size = UDim2.fromScale(1, 1)
         decal.Rotation = 180
-
-        this.selectedColor = Color3.fromRGB(255, 255, 255)
+        
         let rainbow =new Array<Color3>()
         rainbow.push(Color3.fromRGB(255, 0 , 0), Color3.fromRGB(255, 127, 0), Color3.fromRGB(255, 255, 0), Color3.fromRGB(0, 255, 0), Color3.fromRGB(0, 0, 255), Color3.fromRGB(75, 0, 130), Color3.fromRGB(148, 0, 211))
        
@@ -105,20 +127,14 @@ class ColorPicker
             fakeThis.selectedColor =        Color3.fromHSV(hue, saturation, 1)
 
         })
-        colorFrame.MouseLeave.Connect(function()
+        
+        defaultSetter.MouseButton1Up.Connect(function()
         {
-            if(fakeThis.uisC !== undefined)
-            {
-                fakeThis.uisC.Disconnect()
-            }
+            fakeThis.selectedColor = undefined
         })
     }
     Disable()
     {
-        if(this.uisC !== undefined)
-        {
-            this.uisC.Disconnect()
-        }
         this.thisFrame.Destroy()
     }
 }

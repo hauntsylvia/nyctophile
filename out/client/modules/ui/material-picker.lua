@@ -31,18 +31,16 @@ do
 		box.Name = "box"
 		box.BorderSizePixel = 0
 		box.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-		box.PlaceholderText = "Default"
+		box.PlaceholderText = "Default Material"
+		box.PlaceholderColor3 = Color3.fromRGB(50, 50, 50)
 		box.Text = ""
 		box.TextSize = 18
 		box.TextScaled = false
 		box.ClearTextOnFocus = false
 		box.TextXAlignment = Enum.TextXAlignment.Center
 		box.TextColor3 = Color3.fromRGB(180, 180, 180)
-		box.Size = UDim2.fromScale(0.95, 0.95)
-		box.Position = UDim2.new(0.025, 0, 0.025, 0)
+		box.Size = UDim2.fromScale(1, 1)
 		box.Visible = true
-		box.AnchorPoint = Vector2.new(0.5, 0.5)
-		box.Position = UDim2.fromScale(0.5, 0.5)
 		local corner = Instance.new("UICorner")
 		corner.Parent = box
 		corner.Name = "corner"
@@ -52,6 +50,7 @@ do
 		self.u = game:GetService("UserInputService").InputEnded:Connect(function(inputObject, isProcessed)
 			if not isProcessed then
 				if inputObject.KeyCode == Enum.KeyCode.Return then
+					local foundMat
 					do
 						local i = 0
 						local _shouldIncrement = false
@@ -65,10 +64,14 @@ do
 								break
 							end
 							if string.lower(fakeThis.mats[i + 1].Name) == string.lower(box.Text) then
-								fakeThis.selectedMat = fakeThis.mats[i + 1]
-								break
+								foundMat = fakeThis.mats[i + 1]
 							end
 						end
+					end
+					if foundMat == nil then
+						fakeThis.selectedMat = nil
+					else
+						fakeThis.selectedMat = foundMat
 					end
 				end
 			end

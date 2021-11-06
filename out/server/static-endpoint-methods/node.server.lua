@@ -42,6 +42,34 @@ game:GetService("Players").PlayerRemoving:Connect(function(user)
 		end
 	end
 end)
+local function Internal_CustomizePlaceable(placeable, color, mat, tween)
+	local _condition = tween
+	if _condition == nil then
+		_condition = true
+	end
+	tween = _condition
+	local custParts = placeable:GetCustomizeableParts()
+	local _custParts = custParts
+	local _arg0 = function(part)
+		if color ~= nil then
+			if tween then
+				tweenService:Create(part, TweenInfo.new(0.4), {
+					Color = color,
+				}):Play()
+			else
+				part.Color = color
+			end
+		end
+		if mat ~= nil then
+			part.Material = mat
+		end
+	end
+	-- ▼ ReadonlyArray.forEach ▼
+	for _k, _v in ipairs(_custParts) do
+		_arg0(_v, _k - 1, _custParts)
+	end
+	-- ▲ ReadonlyArray.forEach ▲
+end
 local function PlaceNode(args)
 	local askingPosition = args.clientArgs
 	do
@@ -61,7 +89,7 @@ local function PlaceNode(args)
 			else
 				local _position = nodes[i + 1].position
 				local _askingPosition = askingPosition
-				if (_position - _askingPosition).Magnitude <= nodes[i + 1].config.radius then
+				if (_position - _askingPosition).Magnitude <= nodes[i + 1].config.radius * 2 then
 					return APIResult.new(nil, "Can not place a node inside another player's node.", false)
 				end
 			end
@@ -100,6 +128,7 @@ end
 local function CreatePlaceable(args)
 	local reqPlayersNode = GetSelfNode(args)
 	if reqPlayersNode.success then
+		local usersArgs = args.clientArgs
 		local playersNode = reqPlayersNode.result
 		local requestedPlaceable = (args.clientArgs)[1]
 		local requestedPosition = (args.clientArgs)[2]
@@ -128,10 +157,59 @@ local function CreatePlaceable(args)
 				-- ▲ ReadonlyArray.filter ▲
 				numberOfThisAlreadyPlaced = #_newValue
 				if numberOfThisAlreadyPlaced < realPlaceable.config.maxOfThisAllowed then
-					local _position = playersNode.position
-					local _position_1 = requestedPosition.Position
-					if (_position - _position_1).Magnitude <= playersNode.config.radius then
+					local nodeCanUse
+					do
+						local i = 0
+						local _shouldIncrement = false
+						while true do
+							if _shouldIncrement then
+								i += 1
+							else
+								_shouldIncrement = true
+							end
+							if not (i < #nodes) then
+								break
+							end
+							local r = nodes[i + 1].config.radius
+							local _position = requestedPosition.Position
+							local _position_1 = nodes[i + 1].position
+							local isInNode = (_position - _position_1).Magnitude < r
+							local _trustedUsers = nodes[i + 1].config.trustedUsers
+							local _arg0_1 = function(x)
+								return x == args.caller.userId
+							end
+							-- ▼ ReadonlyArray.filter ▼
+							local _newValue_1 = {}
+							local _length_1 = 0
+							for _k, _v in ipairs(_trustedUsers) do
+								if _arg0_1(_v, _k - 1, _trustedUsers) == true then
+									_length_1 += 1
+									_newValue_1[_length_1] = _v
+								end
+							end
+							-- ▲ ReadonlyArray.filter ▲
+							local _condition = #_newValue_1 > 0
+							if not _condition then
+								_condition = nodes[i + 1].owner == args.caller.userId
+							end
+							local canUseNode = _condition
+							-- if node isnt players node and doesnt trust the player
+							if nodes[i + 1].owner ~= args.caller.userId and (canUseNode and isInNode) then
+								return APIResult.new(nil, "Invalid location: must be placed within a trusted node.", false)
+							elseif canUseNode and isInNode then
+								nodeCanUse = nodes[i + 1]
+								break
+							end
+						end
+					end
+					if nodeCanUse ~= nil then
 						args.caller.ashlin -= realPlaceable.config.cost
+						print(args.caller.ashlin)
+						local _arg0_1 = usersArgs[3]
+						local color = typeof(_arg0_1) ~= nil and usersArgs[3] or nil
+						local _arg0_2 = usersArgs[4]
+						local material = typeof(_arg0_2) ~= nil and usersArgs[4] or nil
+						Internal_CustomizePlaceable(realPlaceable, color, material, false)
 						realPlaceable.attachedModel.Parent = game:GetService("Workspace")
 						realPlaceable.attachedModel:SetPrimaryPartCFrame(requestedPosition)
 						local _activePlaceables_1 = playersNode.activePlaceables
@@ -141,7 +219,7 @@ local function CreatePlaceable(args)
 						-- ▲ Array.push ▲
 						return APIResult.new(realPlaceable, "Successfully placed.", true)
 					else
-						return APIResult.new(nil, "Invalid location. Placeable must be inside of node.", false)
+						return APIResult.new(nil, "Invalid location: no node present.", false)
 					end
 				else
 					return APIResult.new(nil, "Maximum number of this placeable reached.", false)
@@ -244,23 +322,7 @@ local function CustomizeExistingPlaceable(args)
 		end
 	end
 	if thisPlaceable ~= nil then
-		local custParts = thisPlaceable:GetCustomizeableParts()
-		local _custParts = custParts
-		local _arg0_2 = function(part)
-			if color ~= nil then
-				tweenService:Create(part, TweenInfo.new(0.2), {
-					Color = color,
-				}):Play()
-			end
-			if material ~= nil then
-				part.Material = material
-			end
-		end
-		-- ▼ ReadonlyArray.forEach ▼
-		for _k, _v in ipairs(_custParts) do
-			_arg0_2(_v, _k - 1, _custParts)
-		end
-		-- ▲ ReadonlyArray.forEach ▲
+		Internal_CustomizePlaceable(thisPlaceable, color, material)
 		return APIResult.new(thisPlaceable, "Successfully customized placeable.", true)
 	else
 		return APIResult.new(nil, "No matching placeable found.", false)

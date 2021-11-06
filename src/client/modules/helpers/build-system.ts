@@ -7,7 +7,7 @@ const tweenService = game.GetService("TweenService")
 class BuildSystem
 {   
     
-    MakeNodeRepresentation(n?: Node)
+    MakeNodeRepresentation(n?: Node, color?: Color3)
     {
         let nodeModel = new Instance("Model", game.GetService("Workspace"))
         nodeModel.Name = "temp-node-model"
@@ -19,19 +19,20 @@ class BuildSystem
         nodePart.Material = Enum.Material.Neon
         nodePart.CanCollide = false
         nodePart.Anchored = true
-        nodePart.Color = Color3.fromRGB(255, 135, 135)
+        nodePart.Color = color ?? Color3.fromRGB(255, 135, 135)
         nodeModel.PrimaryPart = nodePart
 
         if(n !== undefined)
         {
             let nodeRadius = new Instance("Part", nodeModel)
+            nodeRadius.Shape = Enum.PartType.Ball
             nodeRadius.Name = "temp-node-radius"
-            nodeRadius.Size = new Vector3(n.config.radius,  n.config.radius, n.config.radius)
+            nodeRadius.Size = new Vector3(n.config.radius,  n.config.radius, n.config.radius).mul(2)
             nodeRadius.Transparency = 0.97
             nodeRadius.Material = Enum.Material.Neon
             nodeRadius.CanCollide = false
             nodeRadius.Anchored = true
-            nodeRadius.Color = Color3.fromRGB(255, 135, 135)
+            nodeRadius.Color = color ?? Color3.fromRGB(255, 135, 135)
             nodeModel.SetPrimaryPartCFrame(new CFrame(n.position))
         }
 
@@ -92,9 +93,7 @@ class BuildSystem
                         }
                         else
                         {
-                            let ar = new Array<any>()
-                            ar.push(placeable, s.actualResult)
-                            s.client.PlacePlaceable(ar)
+                            s.client.PlacePlaceable(placeable, s.actualResult)
                             s.Disable()
                         }
                     }
@@ -144,11 +143,22 @@ class BuildSystem
             let allNodesInGame = this.client.GetAllOtherPlayersNodes() ?? new Array<Node>()
             for(let n = 0; n < allNodesInGame.size(); n++)
             {
-                if(allNodesInGame[n].owner !== plr.UserId)
+                if(allNodesInGame[n].owner === plr.UserId)
+                {
+                    let thisNodeModel = s.MakeNodeRepresentation(allNodesInGame[n], Color3.fromRGB(180, 255, 180))
+                    s.allRenderedNodes.push(thisNodeModel)
+                }
+                else
                 {
                     let thisNodeModel = s.MakeNodeRepresentation(allNodesInGame[n])
                     s.allRenderedNodes.push(thisNodeModel)
                 }
+            }
+            let thisRenderedNode: Model | undefined
+            if(node !== undefined)
+            {
+                thisRenderedNode = s.MakeNodeRepresentation(undefined, Color3.fromRGB(180, 255, 180))
+                s.allRenderedNodes.push(thisRenderedNode)
             }
             this.connection = game.GetService("RunService").RenderStepped.Connect(function(deltaTime)
             {
@@ -159,15 +169,20 @@ class BuildSystem
                     {
                         let raycastParams = new RaycastParams()
                         let ignore = new Array<Instance>()
-                        ignore.push(s.attachedModel, char)
-                        raycastParams.FilterDescendantsInstances = ignore
-
-                        if(node !== undefined)
+                        ignore.push(s.attachedModel)
+                        for(let i = 0; i < game.GetService("Players").GetPlayers().size(); i++)
                         {
-                            let thisRenderedNode = s.MakeNodeRepresentation()
-                            s.allRenderedNodes.push(thisRenderedNode)
-                            ignore.push(thisRenderedNode)
+                            let plrsChar = game.GetService("Players").GetPlayers()[i].Character
+                            if(plrsChar !== undefined)
+                            {
+                                ignore.push(plrsChar)
+                            }
                         }
+                        for(let i = 0; i < s.allRenderedNodes.size(); i++)
+                        {
+                            ignore.push(s.allRenderedNodes[i])
+                        }
+                        raycastParams.FilterDescendantsInstances = ignore
 
                         raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
                         let raycastResult = game.GetService("Workspace").Raycast(ray.Origin, ray.Direction.mul(1000), raycastParams)
@@ -195,7 +210,7 @@ class BuildSystem
                                             closestNode = thisN
                                         }
                                     }
-                                    isValid = closestNode !== undefined && actualPosition.sub(closestNode.position).Magnitude >= closestNode.config.radius
+                                    isValid = closestNode !== undefined && actualPosition.sub(closestNode.position).Magnitude >= closestNode.config.radius * 2
                                 }
                             }
                             let colorToTweenTo = isValid ? Color3.fromRGB(135, 255, 135) : Color3.fromRGB(255, 135, 135)
@@ -205,10 +220,10 @@ class BuildSystem
                                 let thisPart = allDesc[i]
                                 if(thisPart.IsA("BasePart"))
                                 {
-                                    thisPart.Color = thisPart.Color.Lerp(colorToTweenTo, 0.2)
+                                    thisPart.Color = thisPart.Color.Lerp(colorToTweenTo, 0.3)
                                 }
                             }
-                            let fakePosition = s.attachedModel.PrimaryPart.CFrame.Lerp(new CFrame(actualPosition).mul(actualRotation), 0.2)
+                            let fakePosition = s.attachedModel.PrimaryPart.CFrame.Lerp(new CFrame(actualPosition).mul(actualRotation), 0.3)
                             s.actualResult = (new CFrame(actualPosition).mul(actualRotation))
                             s.attachedModel.SetPrimaryPartCFrame(fakePosition)
                         }

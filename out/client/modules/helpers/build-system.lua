@@ -18,7 +18,7 @@ do
 		self.allRenderedNodes = {}
 		self.client = client
 	end
-	function BuildSystem:MakeNodeRepresentation(n)
+	function BuildSystem:MakeNodeRepresentation(n, color)
 		local nodeModel = Instance.new("Model", game:GetService("Workspace"))
 		nodeModel.Name = "temp-node-model"
 		local nodePart = Instance.new("Part", nodeModel)
@@ -28,17 +28,26 @@ do
 		nodePart.Material = Enum.Material.Neon
 		nodePart.CanCollide = false
 		nodePart.Anchored = true
-		nodePart.Color = Color3.fromRGB(255, 135, 135)
+		local _condition = color
+		if _condition == nil then
+			_condition = Color3.fromRGB(255, 135, 135)
+		end
+		nodePart.Color = _condition
 		nodeModel.PrimaryPart = nodePart
 		if n ~= nil then
 			local nodeRadius = Instance.new("Part", nodeModel)
+			nodeRadius.Shape = Enum.PartType.Ball
 			nodeRadius.Name = "temp-node-radius"
-			nodeRadius.Size = Vector3.new(n.config.radius, n.config.radius, n.config.radius)
+			nodeRadius.Size = Vector3.new(n.config.radius, n.config.radius, n.config.radius) * 2
 			nodeRadius.Transparency = 0.97
 			nodeRadius.Material = Enum.Material.Neon
 			nodeRadius.CanCollide = false
 			nodeRadius.Anchored = true
-			nodeRadius.Color = Color3.fromRGB(255, 135, 135)
+			local _condition_1 = color
+			if _condition_1 == nil then
+				_condition_1 = Color3.fromRGB(255, 135, 135)
+			end
+			nodeRadius.Color = _condition_1
 			nodeModel:SetPrimaryPartCFrame(CFrame.new(n.position))
 		end
 		return nodeModel
@@ -93,15 +102,7 @@ do
 							s.client:PlaceNode(actualPosition)
 							s:Disable()
 						else
-							local ar = {}
-							local _ar = ar
-							local _actualResult = s.actualResult
-							-- ▼ Array.push ▼
-							local _length = #_ar
-							_ar[_length + 1] = placeable
-							_ar[_length + 2] = _actualResult
-							-- ▲ Array.push ▲
-							s.client:PlacePlaceable(ar)
+							s.client:PlacePlaceable(placeable, s.actualResult)
 							s:Disable()
 						end
 					elseif pressedToDisable ~= nil and inputObject.KeyCode == pressedToDisable then
@@ -156,7 +157,14 @@ do
 					if not (n < #allNodesInGame) then
 						break
 					end
-					if allNodesInGame[n + 1].owner ~= plr.UserId then
+					if allNodesInGame[n + 1].owner == plr.UserId then
+						local thisNodeModel = s:MakeNodeRepresentation(allNodesInGame[n + 1], Color3.fromRGB(180, 255, 180))
+						local _allRenderedNodes = s.allRenderedNodes
+						local _thisNodeModel = thisNodeModel
+						-- ▼ Array.push ▼
+						_allRenderedNodes[#_allRenderedNodes + 1] = _thisNodeModel
+						-- ▲ Array.push ▲
+					else
 						local thisNodeModel = s:MakeNodeRepresentation(allNodesInGame[n + 1])
 						local _allRenderedNodes = s.allRenderedNodes
 						local _thisNodeModel = thisNodeModel
@@ -165,6 +173,15 @@ do
 						-- ▲ Array.push ▲
 					end
 				end
+			end
+			local thisRenderedNode
+			if node ~= nil then
+				thisRenderedNode = s:MakeNodeRepresentation(nil, Color3.fromRGB(180, 255, 180))
+				local _allRenderedNodes = s.allRenderedNodes
+				local _thisRenderedNode = thisRenderedNode
+				-- ▼ Array.push ▼
+				_allRenderedNodes[#_allRenderedNodes + 1] = _thisRenderedNode
+				-- ▲ Array.push ▲
 			end
 			self.connection = game:GetService("RunService").RenderStepped:Connect(function(deltaTime)
 				if s.attachedModel ~= nil then
@@ -178,26 +195,51 @@ do
 						local ignore = {}
 						local _ignore = ignore
 						local _attachedModel = s.attachedModel
-						local _char = char
 						-- ▼ Array.push ▼
-						local _length = #_ignore
-						_ignore[_length + 1] = _attachedModel
-						_ignore[_length + 2] = _char
+						_ignore[#_ignore + 1] = _attachedModel
 						-- ▲ Array.push ▲
-						raycastParams.FilterDescendantsInstances = ignore
-						if node ~= nil then
-							local thisRenderedNode = s:MakeNodeRepresentation()
-							local _allRenderedNodes = s.allRenderedNodes
-							local _thisRenderedNode = thisRenderedNode
-							-- ▼ Array.push ▼
-							_allRenderedNodes[#_allRenderedNodes + 1] = _thisRenderedNode
-							-- ▲ Array.push ▲
-							local _ignore_1 = ignore
-							local _thisRenderedNode_1 = thisRenderedNode
-							-- ▼ Array.push ▼
-							_ignore_1[#_ignore_1 + 1] = _thisRenderedNode_1
-							-- ▲ Array.push ▲
+						do
+							local i = 0
+							local _shouldIncrement = false
+							while true do
+								if _shouldIncrement then
+									i += 1
+								else
+									_shouldIncrement = true
+								end
+								if not (i < #game:GetService("Players"):GetPlayers()) then
+									break
+								end
+								local plrsChar = game:GetService("Players"):GetPlayers()[i + 1].Character
+								if plrsChar ~= nil then
+									local _ignore_1 = ignore
+									local _plrsChar = plrsChar
+									-- ▼ Array.push ▼
+									_ignore_1[#_ignore_1 + 1] = _plrsChar
+									-- ▲ Array.push ▲
+								end
+							end
 						end
+						do
+							local i = 0
+							local _shouldIncrement = false
+							while true do
+								if _shouldIncrement then
+									i += 1
+								else
+									_shouldIncrement = true
+								end
+								if not (i < #s.allRenderedNodes) then
+									break
+								end
+								local _ignore_1 = ignore
+								local _arg0 = s.allRenderedNodes[i + 1]
+								-- ▼ Array.push ▼
+								_ignore_1[#_ignore_1 + 1] = _arg0
+								-- ▲ Array.push ▲
+							end
+						end
+						raycastParams.FilterDescendantsInstances = ignore
 						raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
 						local raycastResult = game:GetService("Workspace"):Raycast(ray.Origin, ray.Direction * 1000, raycastParams)
 						if raycastResult ~= nil then
@@ -244,7 +286,7 @@ do
 									if _condition_2 then
 										local _actualPosition = actualPosition
 										local _position_1 = closestNode.position
-										_condition_2 = (_actualPosition - _position_1).Magnitude >= closestNode.config.radius
+										_condition_2 = (_actualPosition - _position_1).Magnitude >= closestNode.config.radius * 2
 									end
 									isValid = _condition_2
 								end
@@ -265,14 +307,14 @@ do
 									end
 									local thisPart = allDesc[i + 1]
 									if thisPart:IsA("BasePart") then
-										thisPart.Color = thisPart.Color:Lerp(colorToTweenTo, 0.2)
+										thisPart.Color = thisPart.Color:Lerp(colorToTweenTo, 0.3)
 									end
 								end
 							end
 							local _fn = s.attachedModel.PrimaryPart.CFrame
 							local _cFrame = CFrame.new(actualPosition)
 							local _actualRotation = actualRotation
-							local fakePosition = _fn:Lerp(_cFrame * _actualRotation, 0.2)
+							local fakePosition = _fn:Lerp(_cFrame * _actualRotation, 0.3)
 							local _cFrame_1 = CFrame.new(actualPosition)
 							local _actualRotation_1 = actualRotation
 							s.actualResult = (_cFrame_1 * _actualRotation_1)

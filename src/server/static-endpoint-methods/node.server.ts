@@ -44,6 +44,30 @@ game.GetService("Players").PlayerRemoving.Connect(function(user)
     }
 })
 
+function Internal_CustomizePlaceable(placeable: Placeable, color?: Color3, mat?: Enum.Material, tween?: boolean)
+{
+    tween = tween ?? true
+    let custParts = placeable.GetCustomizeableParts()
+    custParts.forEach(part =>
+        {
+            if(color !== undefined)
+            {
+                if(tween)
+                {
+                    tweenService.Create(part, new TweenInfo(0.4), {Color: color}).Play()
+                }
+                else
+                {
+                    part.Color = color
+                }
+            }
+            if(mat !== undefined)
+            {
+                part.Material = mat
+            }
+        })
+}
+
 function PlaceNode(args: APIArgs)
 {
     let askingPosition = args.clientArgs as Vector3
@@ -53,7 +77,7 @@ function PlaceNode(args: APIArgs)
         {
             return new APIResult<any>(undefined, "Your node has already been placed.", false)
         }
-        else if(nodes[i].position.sub(askingPosition).Magnitude <= nodes[i].config.radius)
+        else if(nodes[i].position.sub(askingPosition).Magnitude <= nodes[i].config.radius * 2)
         {
             return new APIResult<any>(undefined, "Can not place a node inside another player's node.", false)
         }
@@ -82,9 +106,12 @@ function CreatePlaceable(args: APIArgs)
     let reqPlayersNode = GetSelfNode(args)
     if(reqPlayersNode.success)
     {
+        let usersArgs = args.clientArgs as Array<unknown>
+
         let playersNode = reqPlayersNode.result as Node
         let requestedPlaceable = (args.clientArgs as Array<any>)[0] as Placeable
         let requestedPosition = (args.clientArgs as Array<any>)[1] as CFrame
+        
         let realPlaceable = helper.GetRealFromUntrustedPlaceable(requestedPlaceable)
         if(realPlaceable !== undefined)
         {
@@ -94,9 +121,30 @@ function CreatePlaceable(args: APIArgs)
                 numberOfThisAlreadyPlaced = playersNode.activePlaceables.filter(x => x.config.name === realPlaceable?.config.name).size()
                 if(numberOfThisAlreadyPlaced < realPlaceable.config.maxOfThisAllowed)
                 {
-                    if(playersNode.position.sub(requestedPosition.Position).Magnitude <= playersNode.config.radius)
+                    let nodeCanUse: Node | undefined
+                    for(let i = 0; i < nodes.size(); i++)
+                    {
+                        let r = nodes[i].config.radius
+                        let isInNode = requestedPosition.Position.sub(nodes[i].position).Magnitude < r
+                        let canUseNode = nodes[i].config.trustedUsers.filter(x => x === args.caller.userId).size() > 0 || nodes[i].owner === args.caller.userId
+                        // if node isnt players node and doesnt trust the player
+                        if(nodes[i].owner !== args.caller.userId && canUseNode && isInNode)
+                        {
+                            return new APIResult<any>(undefined, "Invalid location: must be placed within a trusted node.", false)
+                        }
+                        else if(canUseNode && isInNode)
+                        {
+                            nodeCanUse = nodes[i]
+                            break
+                        }
+                    }
+                    if(nodeCanUse !== undefined)
                     {
                         args.caller.ashlin -= realPlaceable.config.cost
+                        print(args.caller.ashlin)
+                        let color: Color3 | undefined = typeOf(usersArgs[2]) !== undefined ? usersArgs[2] as Color3 : undefined
+                        let material: Enum.Material | undefined = typeOf(usersArgs[3]) !== undefined ? usersArgs[3] as Enum.Material : undefined
+                        Internal_CustomizePlaceable(realPlaceable, color, material, false)
                         realPlaceable.attachedModel.Parent = game.GetService("Workspace")
                         realPlaceable.attachedModel.SetPrimaryPartCFrame(requestedPosition)
                         playersNode.activePlaceables.push(realPlaceable)
@@ -104,7 +152,7 @@ function CreatePlaceable(args: APIArgs)
                     }
                     else
                     {
-                        return new APIResult<any>(undefined, "Invalid location. Placeable must be inside of node.", false)
+                        return new APIResult<any>(undefined, "Invalid location: no node present.", false)
                     }
                 }
                 else
@@ -171,18 +219,7 @@ function CustomizeExistingPlaceable(args: APIArgs)
     }
     if(thisPlaceable !== undefined)
     {
-        let custParts = thisPlaceable.GetCustomizeableParts()
-        custParts.forEach(part =>
-            {
-                if(color !== undefined)
-                {
-                    tweenService.Create(part, new TweenInfo(0.2), {Color: color}).Play()
-                }
-                if(material !== undefined)
-                {
-                    part.Material = material
-                }
-            })
+        Internal_CustomizePlaceable(thisPlaceable, color, material)
         return new APIResult<Placeable>(thisPlaceable, "Successfully customized placeable.", true)
     }
     else

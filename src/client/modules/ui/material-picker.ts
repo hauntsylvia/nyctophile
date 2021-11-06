@@ -27,18 +27,16 @@ class MaterialPicker
         box.Name = "box"
         box.BorderSizePixel = 0
         box.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-        box.PlaceholderText = "Default"
+        box.PlaceholderText = "Default Material"
+        box.PlaceholderColor3 = Color3.fromRGB(50, 50, 50)
         box.Text = ""
         box.TextSize = 18
         box.TextScaled = false
         box.ClearTextOnFocus = false
         box.TextXAlignment = Enum.TextXAlignment.Center
         box.TextColor3 = Color3.fromRGB(180, 180, 180)
-        box.Size = UDim2.fromScale(0.95, 0.95)
-        box.Position = new UDim2(0.025, 0, 0.025, 0)
+        box.Size = UDim2.fromScale(1, 1)
         box.Visible = true
-        box.AnchorPoint = new Vector2(0.5, 0.5)
-        box.Position = UDim2.fromScale(0.5, 0.5)
 
         let corner = new Instance("UICorner")
         corner.Parent = box
@@ -54,13 +52,21 @@ class MaterialPicker
             {
                 if(inputObject.KeyCode === Enum.KeyCode.Return)
                 {
+                    let foundMat: Enum.Material | undefined
                     for(let i = 0; i < fakeThis.mats.size(); i++)
                     {
                         if(fakeThis.mats[i].Name.lower() === box.Text.lower())
                         {
-                            fakeThis.selectedMat = fakeThis.mats[i]
-                            break
+                            foundMat = fakeThis.mats[i]
                         }
+                    }
+                    if(foundMat === undefined)
+                    {
+                        fakeThis.selectedMat = undefined
+                    }
+                    else
+                    {
+                        fakeThis.selectedMat = foundMat
                     }
                 }
             }

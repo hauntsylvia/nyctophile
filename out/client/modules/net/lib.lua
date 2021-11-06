@@ -39,8 +39,13 @@ do
 		local n = self.client:Send("nodes", "all", nil)
 		return n
 	end
-	function Client:PlacePlaceable(ar)
-		local n = self.client:Send("nodes", "placeables.create", ar)
+	function Client:PlacePlaceable(placeable, c, color, material)
+		local toSend = table.create(3)
+		toSend[1] = placeable
+		toSend[2] = c
+		toSend[3] = color
+		toSend[4] = material
+		local n = self.client:Send("nodes", "placeables.create", toSend)
 		return n
 	end
 	function Client:GetAllPossiblePlaceables()
@@ -70,7 +75,7 @@ do
 	function InternalClient:constructor()
 	end
 	function InternalClient:Send(lower, upper, args)
-		print("sent to " .. (lower .. ("/" .. upper)))
+		print(lower .. ("/" .. upper))
 		local myEvents = game:GetService("ReplicatedStorage"):WaitForChild("player")
 		local serversEvent = game:GetService("ReplicatedStorage"):WaitForChild("api"):WaitForChild("func")
 		if serversEvent:IsA("RemoteFunction") then

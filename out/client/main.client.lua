@@ -21,6 +21,7 @@ local buildUI = plr:WaitForChild("PlayerGui"):WaitForChild("BuildingsGUI")
 local runService = game:GetService("RunService")
 local userInputService = game:GetService("UserInputService")
 local tweenService = game:GetService("TweenService")
+local canInteractableHeartbeatRun = true
 local function EvaluateInteractables()
 	local ints = lib:GetInteractables()
 	if ints ~= nil then
@@ -70,7 +71,7 @@ local function EvaluateInteractables()
 end
 local closestDraw = nil
 runService.Heartbeat:Connect(function(deltaTime)
-	if #draws > 0 then
+	if #draws > 0 and canInteractableHeartbeatRun then
 		do
 			local i = 0
 			local _shouldIncrement = false
@@ -100,14 +101,19 @@ runService.Heartbeat:Connect(function(deltaTime)
 		if closestDraw ~= nil and not closestDraw.isEnabled then
 			closestDraw:Enable(true, plr)
 		end
+	else
+		if closestDraw ~= nil then
+			closestDraw:Disable()
+		end
 	end
 end)
 local lastColorPicker
 local lastMatPicker
+local lastSelected
 userInputService.InputEnded:Connect(function(inputObject, isProcessed)
 	if not isProcessed and me ~= nil then
 		local keySettings = me.playerSettings.playerKeys
-		if inputObject.KeyCode.Name == keySettings.interactKey and (closestDraw ~= nil and closestDraw:IsInRange(plr)) then
+		if inputObject.KeyCode.Name == keySettings.interactKey and (closestDraw ~= nil and (closestDraw:IsInRange(plr) and canInteractableHeartbeatRun)) then
 			closestDraw:Interact()
 		elseif inputObject.KeyCode.Name == keySettings.buildSystemKey then
 			local _condition = node
@@ -118,6 +124,7 @@ userInputService.InputEnded:Connect(function(inputObject, isProcessed)
 			node = selfNode
 			if not buildSystem.isEnabled then
 				if selfNode ~= nil then
+					buildUI.Enabled = not buildUI.Enabled
 					local _result = buildUI:FindFirstChild("Screen")
 					if _result ~= nil then
 						_result = _result:FindFirstChild("Customization")
@@ -155,78 +162,73 @@ userInputService.InputEnded:Connect(function(inputObject, isProcessed)
 							end
 						end
 					end
-					local larry = lib:GetAllPossiblePlaceables()
-					if larry ~= nil then
-						do
-							local _i = 0
-							local _shouldIncrement = false
-							while true do
-								local i = _i
-								if _shouldIncrement then
-									i += 1
-								else
-									_shouldIncrement = true
-								end
-								if not (i < #larry) then
-									break
-								end
-								local _result_2 = scrollFrame
-								if _result_2 ~= nil then
-									_result_2 = _result_2:FindFirstChild("A")
-									if _result_2 ~= nil then
-										_result_2 = _result_2:Clone()
-									end
-								end
-								local placementUIFrame = _result_2
-								placementUIFrame.Parent = scrollFrame
-								placementUIFrame.Visible = true
-								placementUIFrame.Name = "_"
-								placementUIFrame.BackgroundTransparency = 1
-								tweenService:Create(placementUIFrame, TweenInfo.new(0.2), {
-									BackgroundTransparency = 0,
-								}):Play()
-								local b = placementUIFrame:FindFirstChild("B")
-								print(larry[i + 1].config.name)
-								b.Text = larry[i + 1].config.name
-								b.MouseButton1Up:Connect(function()
-									if larry ~= nil and #larry > 0 then
-										buildSystem:Disable()
-										buildSystem:Enable(larry[i + 1], nil, nil, selfNode)
-										local _condition_1 = lastColorPicker
-										if _condition_1 == nil then
-											_condition_1 = ColorPicker.new(customizeableFrame:FindFirstChild("ColorPicker"))
-										end
-										lastColorPicker = _condition_1
-										local _condition_2 = lastMatPicker
-										if _condition_2 == nil then
-											_condition_2 = MaterialPicker.new(customizeableFrame:FindFirstChild("MaterialPicker"))
-										end
-										lastMatPicker = _condition_2
-										local uisEv
-										uisEv = userInputService.InputBegan:Connect(function(inputObj, isProcessed)
-											if not isProcessed and (inputObj.UserInputType == Enum.UserInputType.MouseButton1 and (larry ~= nil and (lastColorPicker ~= nil and lastMatPicker ~= nil))) then
-												local ar = {}
-												local _ar = ar
-												local _arg0 = larry[i + 1]
-												local _actualResult = buildSystem.actualResult
-												-- ▼ Array.push ▼
-												local _length = #_ar
-												_ar[_length + 1] = _arg0
-												_ar[_length + 2] = _actualResult
-												-- ▲ Array.push ▲
-												local placeable = lib:PlacePlaceable(ar)
-												if placeable ~= nil then
-													buildSystem:Disable()
-													lib:CustomizePlaceable(placeable.id, lastColorPicker.selectedColor, lastMatPicker.selectedMat)
-													uisEv:Disconnect()
-												end
-											end
-										end)
+					if buildUI.Enabled then
+						local larry = lib:GetAllPossiblePlaceables()
+						if larry ~= nil then
+							do
+								local _i = 0
+								local _shouldIncrement = false
+								while true do
+									local i = _i
+									if _shouldIncrement then
+										i += 1
 									else
-										print("No placeables.")
+										_shouldIncrement = true
 									end
-								end)
-								_i = i
+									if not (i < #larry) then
+										break
+									end
+									local _result_2 = scrollFrame
+									if _result_2 ~= nil then
+										_result_2 = _result_2:FindFirstChild("A")
+										if _result_2 ~= nil then
+											_result_2 = _result_2:Clone()
+										end
+									end
+									local placementUIFrame = _result_2
+									placementUIFrame.Parent = scrollFrame
+									placementUIFrame.Visible = true
+									placementUIFrame.Name = "_"
+									placementUIFrame.BackgroundTransparency = 1
+									tweenService:Create(placementUIFrame, TweenInfo.new(0.2), {
+										BackgroundTransparency = 0,
+									}):Play()
+									local b = placementUIFrame:FindFirstChild("B")
+									b.Text = larry[i + 1].config.name
+									b.MouseButton1Up:Connect(function()
+										if larry ~= nil and #larry > 0 then
+											lastSelected = larry[i + 1]
+											buildSystem:Disable()
+											buildSystem:Enable(larry[i + 1], nil, nil, selfNode)
+											local _condition_1 = lastColorPicker
+											if _condition_1 == nil then
+												_condition_1 = ColorPicker.new(customizeableFrame:FindFirstChild("ColorPicker"))
+											end
+											lastColorPicker = _condition_1
+											local _condition_2 = lastMatPicker
+											if _condition_2 == nil then
+												_condition_2 = MaterialPicker.new(customizeableFrame:FindFirstChild("MaterialPicker"))
+											end
+											lastMatPicker = _condition_2
+											canInteractableHeartbeatRun = false
+											local uisEv
+											uisEv = userInputService.InputEnded:Connect(function(inputObj, isProcessed)
+												if not isProcessed and (inputObj.UserInputType == Enum.UserInputType.MouseButton1 and (larry ~= nil and (lastColorPicker ~= nil and (lastMatPicker ~= nil and buildSystem.isEnabled)))) then
+													local placeable = lib:PlacePlaceable(larry[i + 1], buildSystem.actualResult, lastColorPicker.selectedColor, lastMatPicker.selectedMat)
+													if placeable ~= nil then
+														canInteractableHeartbeatRun = true
+														lastSelected = nil
+														buildSystem:Disable()
+														uisEv:Disconnect()
+													end
+												end
+											end)
+										else
+											print("No placeables.")
+										end
+									end)
+									_i = i
+								end
 							end
 						end
 					end

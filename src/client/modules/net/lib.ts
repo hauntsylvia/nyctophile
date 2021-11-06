@@ -41,9 +41,14 @@ class Client
         let n = this.client.Send<Array<Node>>("nodes", "all", undefined)
         return n
     }
-    PlacePlaceable(ar: Array<any>)
+    PlacePlaceable(placeable: Placeable, c: CFrame, color?: Color3, material?: Enum.Material)
     {
-        let n = this.client.Send<Placeable>("nodes", "placeables.create", ar)
+        let toSend = new Array<any>(3)
+        toSend[0] = placeable
+        toSend[1] = c
+        toSend[2] = color
+        toSend[3] = material
+        let n = this.client.Send<Placeable>("nodes", "placeables.create", toSend)
         return n
     }
     GetAllPossiblePlaceables()
@@ -66,7 +71,7 @@ class InternalClient
 {
     Send<T>(lower: string, upper: string, args: any)
     {
-        print(`sent to ${lower}/${upper}`)
+        print(`${lower}/${upper}`)
         let myEvents = game.GetService("ReplicatedStorage").WaitForChild("player")
         let serversEvent = game.GetService("ReplicatedStorage").WaitForChild("api").WaitForChild("func")
         if(serversEvent.IsA("RemoteFunction"))

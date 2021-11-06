@@ -26,14 +26,34 @@ do
 		self.thisFrame.Size = UDim2.new(0.95, 0, 0.95, 0)
 		self.thisFrame.Position = UDim2.new(0.025, 0, 0.025, 0)
 		self.thisFrame.Visible = true
-		self.thisFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-		self.thisFrame.Position = UDim2.fromScale(0.5, 0.5)
+		local list = Instance.new("UIListLayout")
+		list.Parent = self.thisFrame
+		list.HorizontalAlignment = Enum.HorizontalAlignment.Center
+		list.FillDirection = Enum.FillDirection.Horizontal
+		list.Name = "ui list"
+		list.VerticalAlignment = Enum.VerticalAlignment.Center
+		list.Padding = UDim.new(0.25, 0)
+		local defaultSetter = Instance.new("TextButton")
+		defaultSetter.Parent = self.thisFrame
+		defaultSetter.Name = "defaultSetter"
+		defaultSetter.BorderSizePixel = 0
+		defaultSetter.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+		defaultSetter.Text = "Default Color"
+		defaultSetter.TextSize = 18
+		defaultSetter.TextScaled = false
+		defaultSetter.TextXAlignment = Enum.TextXAlignment.Center
+		defaultSetter.TextColor3 = Color3.fromRGB(180, 180, 180)
+		defaultSetter.Size = UDim2.fromScale(0.4, 0.4)
+		defaultSetter.Position = UDim2.new(0.025, 0, 0.025, 0)
+		defaultSetter.Visible = true
+		defaultSetter.AnchorPoint = Vector2.new(0.5, 0.5)
+		defaultSetter.Position = UDim2.fromScale(0.5, 0.5)
 		local colorFrame = Instance.new("Frame")
 		colorFrame.Parent = self.thisFrame
 		colorFrame.Name = "color frame"
 		colorFrame.BackgroundTransparency = 0
 		colorFrame.BorderSizePixel = 0
-		colorFrame.Size = UDim2.fromScale(0.9, 0.9)
+		colorFrame.Size = UDim2.fromScale(0.8, 0.8)
 		colorFrame.Position = UDim2.new(0.05, 0, 0.05, 0)
 		colorFrame.Visible = true
 		colorFrame.ClipsDescendants = true
@@ -72,7 +92,6 @@ do
 		decal.Name = "wheel"
 		decal.Size = UDim2.fromScale(1, 1)
 		decal.Rotation = 180
-		self.selectedColor = Color3.fromRGB(255, 255, 255)
 		local rainbow = {}
 		local _rainbow = rainbow
 		local _arg0 = Color3.fromRGB(255, 0, 0)
@@ -125,16 +144,11 @@ do
 			local saturation = len / r
 			fakeThis.selectedColor = Color3.fromHSV(hue, saturation, 1)
 		end)
-		colorFrame.MouseLeave:Connect(function()
-			if fakeThis.uisC ~= nil then
-				fakeThis.uisC:Disconnect()
-			end
+		defaultSetter.MouseButton1Up:Connect(function()
+			fakeThis.selectedColor = nil
 		end)
 	end
 	function ColorPicker:Disable()
-		if self.uisC ~= nil then
-			self.uisC:Disconnect()
-		end
 		self.thisFrame:Destroy()
 	end
 end

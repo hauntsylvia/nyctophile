@@ -17,11 +17,13 @@ let me = lib.GetMe()
 let node: Node | undefined
 
 const buildSystem = new BuildSystem(lib)
-const buildUI = plr.WaitForChild("PlayerGui").WaitForChild("BuildingsGUI")
+const buildUI = plr.WaitForChild("PlayerGui").WaitForChild("BuildingsGUI") as ScreenGui
 
 const runService = game.GetService("RunService")
 const userInputService = game.GetService("UserInputService")
 const tweenService = game.GetService("TweenService")
+
+let canInteractableHeartbeatRun = true
 
 function EvaluateInteractables()
 {
@@ -53,7 +55,7 @@ function EvaluateInteractables()
 let closestDraw: Draw | undefined = undefined
 runService.Heartbeat.Connect(function(deltaTime)
 {
-    if(draws.size() > 0)
+    if(draws.size() > 0 && canInteractableHeartbeatRun)
     {
         for(let i = 0; i < draws.size(); i++)
         {
@@ -79,15 +81,23 @@ runService.Heartbeat.Connect(function(deltaTime)
             closestDraw.Enable(true, plr)
         }
     }
+    else
+    {
+        if(closestDraw !== undefined)
+        {
+            closestDraw.Disable()
+        }
+    }
 })
 let lastColorPicker: ColorPicker | undefined
 let lastMatPicker: MaterialPicker | undefined
+let lastSelected: Placeable | undefined
 userInputService.InputEnded.Connect(function(inputObject, isProcessed)
 {
     if(!isProcessed && me !== undefined)
     {
         let keySettings = me.playerSettings.playerKeys
-        if(inputObject.KeyCode.Name === keySettings.interactKey && closestDraw !== undefined && closestDraw.IsInRange(plr))
+        if(inputObject.KeyCode.Name === keySettings.interactKey && closestDraw !== undefined && closestDraw.IsInRange(plr) && canInteractableHeartbeatRun)
         {
             closestDraw.Interact()
         }
@@ -99,6 +109,7 @@ userInputService.InputEnded.Connect(function(inputObject, isProcessed)
             {
                 if(selfNode !== undefined)
                 {
+                    buildUI.Enabled = !buildUI.Enabled
                     let customizeableFrame = buildUI.FindFirstChild("Screen")?.FindFirstChild("Customization") as Frame
                     let scrollFrame = buildUI.FindFirstChild("Screen")?.FindFirstChild("Placeables")?.FindFirstChild("Placeables") as ScrollingFrame
                     let children = scrollFrame?.GetChildren()
@@ -112,49 +123,52 @@ userInputService.InputEnded.Connect(function(inputObject, isProcessed)
                             }
                         }
                     }
-                    let larry = lib.GetAllPossiblePlaceables()
-                    if(larry !== undefined)
+                    if(buildUI.Enabled)
                     {
-                        for(let i = 0; i < larry.size(); i++)
+                        let larry = lib.GetAllPossiblePlaceables()
+                        if(larry !== undefined)
                         {
-                            let placementUIFrame = scrollFrame?.FindFirstChild("A")?.Clone() as Frame
-                            placementUIFrame.Parent = scrollFrame
-                            placementUIFrame.Visible = true
-                            placementUIFrame.Name = "_"
-                            placementUIFrame.BackgroundTransparency = 1
-                            tweenService.Create(placementUIFrame, new TweenInfo(0.2), {BackgroundTransparency: 0}).Play()
-                            let b = placementUIFrame.FindFirstChild("B") as TextButton
-                            print(larry[i].config.name)
-                            b.Text = larry[i].config.name
-                            b.MouseButton1Up.Connect(function()
+                            for(let i = 0; i < larry.size(); i++)
                             {
-                                if(larry !== undefined && larry.size() > 0)
+                                let placementUIFrame = scrollFrame?.FindFirstChild("A")?.Clone() as Frame
+                                placementUIFrame.Parent = scrollFrame
+                                placementUIFrame.Visible = true
+                                placementUIFrame.Name = "_"
+                                placementUIFrame.BackgroundTransparency = 1
+                                tweenService.Create(placementUIFrame, new TweenInfo(0.2), {BackgroundTransparency: 0}).Play()
+                                let b = placementUIFrame.FindFirstChild("B") as TextButton
+                                b.Text = larry[i].config.name
+                                b.MouseButton1Up.Connect(function()
                                 {
-                                    buildSystem.Disable()
-                                    buildSystem.Enable(larry[i], undefined, undefined, selfNode)
-                                    lastColorPicker = lastColorPicker ?? new ColorPicker(customizeableFrame.FindFirstChild("ColorPicker") as Frame)
-                                    lastMatPicker = lastMatPicker ?? new MaterialPicker(customizeableFrame.FindFirstChild("MaterialPicker") as Frame)
-                                    let uisEv = userInputService.InputBegan.Connect(function(inputObj, isProcessed)
+                                    if(larry !== undefined && larry.size() > 0)
                                     {
-                                        if(!isProcessed && inputObj.UserInputType === Enum.UserInputType.MouseButton1 && larry !== undefined && lastColorPicker !== undefined && lastMatPicker !== undefined)
+                                        lastSelected = larry[i]
+                                        buildSystem.Disable()
+                                        buildSystem.Enable(larry[i], undefined, undefined, selfNode)
+                                        lastColorPicker = lastColorPicker ?? new ColorPicker(customizeableFrame.FindFirstChild("ColorPicker") as Frame)
+                                        lastMatPicker = lastMatPicker ?? new MaterialPicker(customizeableFrame.FindFirstChild("MaterialPicker") as Frame)
+                                        canInteractableHeartbeatRun = false
+                                        let uisEv = userInputService.InputEnded.Connect(function(inputObj, isProcessed)
                                         {
-                                            let ar = new Array<any>()
-                                            ar.push(larry[i], buildSystem.actualResult)
-                                            let placeable = lib.PlacePlaceable(ar)
-                                            if(placeable !== undefined)
+                                            if(!isProcessed && inputObj.UserInputType === Enum.UserInputType.MouseButton1 && larry !== undefined && lastColorPicker !== undefined && lastMatPicker !== undefined && buildSystem.isEnabled)
                                             {
-                                                buildSystem.Disable()
-                                                lib.CustomizePlaceable(placeable.id, lastColorPicker.selectedColor, lastMatPicker.selectedMat)
-                                                uisEv.Disconnect()
+                                                let placeable = lib.PlacePlaceable(larry[i], buildSystem.actualResult, lastColorPicker.selectedColor, lastMatPicker.selectedMat)
+                                                if(placeable !== undefined)
+                                                {
+                                                    canInteractableHeartbeatRun = true
+                                                    lastSelected = undefined
+                                                    buildSystem.Disable()
+                                                    uisEv.Disconnect()
+                                                }
                                             }
-                                        }
-                                    })
-                                }
-                                else
-                                {
-                                    print("No placeables.")
-                                }
-                            })
+                                        })
+                                    }
+                                    else
+                                    {
+                                        print("No placeables.")
+                                    }
+                                })
+                            }
                         }
                     }
                 }
