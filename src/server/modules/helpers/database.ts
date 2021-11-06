@@ -29,7 +29,17 @@ class Database
         this.cache[key] =  value
         this.database.SetAsync(key, value)   
     }
-
+    SetPlayerState(plr: PlayerState)
+    {
+        for(let i = 0; i < players.size(); i++)
+        {
+            if(players[i].userId === plr.userId)
+            {
+                players.remove(i)
+            }
+        }
+        players.push(plr)
+    }
     GetPlayerState(user: Player)
     {
         let player
@@ -49,7 +59,7 @@ class Database
                 player = new PlayerState
                 (
                     user.UserId, 
-                    500,
+                    25000,
                     new PlayerCard
                     (
                         0, 

@@ -42,6 +42,29 @@ do
 		self.cache[key] = value
 		self.database:SetAsync(key, value)
 	end
+	function Database:SetPlayerState(plr)
+		do
+			local i = 0
+			local _shouldIncrement = false
+			while true do
+				if _shouldIncrement then
+					i += 1
+				else
+					_shouldIncrement = true
+				end
+				if not (i < #players) then
+					break
+				end
+				if players[i + 1].userId == plr.userId then
+					local _i = i
+					table.remove(players, _i + 1)
+				end
+			end
+		end
+		-- ▼ Array.push ▼
+		players[#players + 1] = plr
+		-- ▲ Array.push ▲
+	end
 	function Database:GetPlayerState(user)
 		local player
 		do
@@ -69,7 +92,7 @@ do
 			end
 			player = _condition
 			if player == nil then
-				player = PlayerState.new(user.UserId, 500, PlayerCard.new(0, "new"), PlayerSettings.new(PlayerKeySettings.new("E", "G", "U")), PlayerInventory.new(5))
+				player = PlayerState.new(user.UserId, 25000, PlayerCard.new(0, "new"), PlayerSettings.new(PlayerKeySettings.new("E", "G", "U")), PlayerInventory.new(5))
 			end
 			local _player = player
 			-- ▼ Array.push ▼

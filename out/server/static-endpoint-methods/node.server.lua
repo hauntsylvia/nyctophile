@@ -5,6 +5,7 @@ local APIResult = TS.import(script, game:GetService("ReplicatedStorage"), "TS", 
 local Node = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "node", "node").Node
 local NodeConfig = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "node", "node-config").NodeConfig
 local NodeHelper = TS.import(script, game:GetService("ServerScriptService"), "TS", "modules", "helpers", "node-helper").NodeHelper
+local SetPlayerState = TS.import(script, game:GetService("ServerScriptService"), "TS", "modules", "lib", "player-state-consistency").SetPlayerState
 local helper
 local dir = game:GetService("ReplicatedStorage"):FindFirstChild("Placeables")
 if dir == nil then
@@ -203,6 +204,7 @@ local function CreatePlaceable(args)
 						end
 					end
 					if nodeCanUse ~= nil then
+						print(args.caller.ashlin)
 						args.caller.ashlin -= realPlaceable.config.cost
 						print(args.caller.ashlin)
 						local _arg0_1 = usersArgs[3]
@@ -217,6 +219,7 @@ local function CreatePlaceable(args)
 						-- ▼ Array.push ▼
 						_activePlaceables_1[#_activePlaceables_1 + 1] = _realPlaceable
 						-- ▲ Array.push ▲
+						SetPlayerState(args.caller)
 						return APIResult.new(realPlaceable, "Successfully placed.", true)
 					else
 						return APIResult.new(nil, "Invalid location: no node present.", false)

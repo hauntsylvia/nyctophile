@@ -19,6 +19,11 @@ const database = new Database()
 const internalAPIDirectory = new Instance("Folder", game.GetService("ServerStorage"))
 internalAPIDirectory.Name = "api"
 
+const updatePlayerF = new Instance("Folder", game.GetService("ServerStorage"))
+updatePlayerF.Name = "upd-player"
+const updatePlayer = new Instance("BindableEvent", updatePlayerF)
+updatePlayer.Name = "u"
+
 function GetEquatingBindableFunction(upper: string, lower: string)
 {
     for(let i = 0; i < internalAPIDirectory.GetChildren().size(); i++)
@@ -44,10 +49,11 @@ apiHandler.OnServerInvoke = function(user, _upperServiceName, _lowerServiceName,
     {
         let upperServiceName = _upperServiceName as string
         let lowerServiceName = _lowerServiceName as string
+        let plr = database.GetPlayerState(user)
         let currentTarget = GetEquatingBindableFunction(upperServiceName, lowerServiceName)
         if(currentTarget !== undefined)
         {
-            let apiArgs = new APIArgs(database.GetPlayerState(user), clientsArgs)
+            let apiArgs = new APIArgs(plr, clientsArgs)
             let result = currentTarget.Invoke(apiArgs)
             return result
         }
@@ -61,6 +67,11 @@ apiHandler.OnServerInvoke = function(user, _upperServiceName, _lowerServiceName,
         return new APIResult<unknown>(undefined, "Malformed client data or internal server failure.", false)
     }
 }
+
+updatePlayer.Event.Connect(function(plr: PlayerState)
+{
+    database.SetPlayerState(plr)
+})
 
 game.GetService("Players").PlayerRemoving.Connect(function(user)
 {

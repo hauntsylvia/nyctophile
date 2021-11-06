@@ -8,6 +8,7 @@ import { Node } from "shared/entities/node/node"
 import { NodeConfig } from "shared/entities/node/node-config"
 import { Placeable } from "shared/entities/node/placeable"
 import { NodeHelper } from "server/modules/helpers/node-helper"
+import { SetPlayerState } from "server/modules/lib/player-state-consistency"
 
 let helper: NodeHelper
 
@@ -140,6 +141,7 @@ function CreatePlaceable(args: APIArgs)
                     }
                     if(nodeCanUse !== undefined)
                     {
+                        print(args.caller.ashlin)
                         args.caller.ashlin -= realPlaceable.config.cost
                         print(args.caller.ashlin)
                         let color: Color3 | undefined = typeOf(usersArgs[2]) !== undefined ? usersArgs[2] as Color3 : undefined
@@ -148,6 +150,8 @@ function CreatePlaceable(args: APIArgs)
                         realPlaceable.attachedModel.Parent = game.GetService("Workspace")
                         realPlaceable.attachedModel.SetPrimaryPartCFrame(requestedPosition)
                         playersNode.activePlaceables.push(realPlaceable)
+                        
+                        SetPlayerState(args.caller)
                         return new APIResult<Placeable>(realPlaceable, "Successfully placed.", true)
                     }
                     else

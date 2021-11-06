@@ -12,6 +12,10 @@ apiHandler.Name = "func"
 local database = Database.new()
 local internalAPIDirectory = Instance.new("Folder", game:GetService("ServerStorage"))
 internalAPIDirectory.Name = "api"
+local updatePlayerF = Instance.new("Folder", game:GetService("ServerStorage"))
+updatePlayerF.Name = "upd-player"
+local updatePlayer = Instance.new("BindableEvent", updatePlayerF)
+updatePlayer.Name = "u"
 local function GetEquatingBindableFunction(upper, lower)
 	do
 		local i = 0
@@ -53,9 +57,10 @@ apiHandler.OnServerInvoke = function(user, _upperServiceName, _lowerServiceName,
 	local _exitType, _returns = TS.try(function()
 		local upperServiceName = _upperServiceName
 		local lowerServiceName = _lowerServiceName
+		local plr = database:GetPlayerState(user)
 		local currentTarget = GetEquatingBindableFunction(upperServiceName, lowerServiceName)
 		if currentTarget ~= nil then
-			local apiArgs = APIArgs.new(database:GetPlayerState(user), clientsArgs)
+			local apiArgs = APIArgs.new(plr, clientsArgs)
 			local result = currentTarget:Invoke(apiArgs)
 			return TS.TRY_RETURN, { result }
 		else
@@ -68,6 +73,9 @@ apiHandler.OnServerInvoke = function(user, _upperServiceName, _lowerServiceName,
 		return unpack(_returns)
 	end
 end
+updatePlayer.Event:Connect(function(plr)
+	database:SetPlayerState(plr)
+end)
 game:GetService("Players").PlayerRemoving:Connect(function(user)
 	database:SavePlayerState(database:GetPlayerState(user))
 end)
