@@ -235,6 +235,7 @@ function CustomizeExistingPlaceable(args: APIArgs)
 thisService.RegisterNewLowerService("create").OnInvoke = PlaceNode
 thisService.RegisterNewLowerService("all").OnInvoke = GetAllNodes
 thisService.RegisterNewLowerService("me").OnInvoke = GetSelfNode
+
 thisService.RegisterNewLowerService("placeables.create").OnInvoke = CreatePlaceable
 thisService.RegisterNewLowerService("placeables.all").OnInvoke = GetAllPlaceables
 thisService.RegisterNewLowerService("placeables.customize").OnInvoke = CustomizeExistingPlaceable
