@@ -79,16 +79,6 @@ local function DrawBuildUICategories()
 				baseTextBtn.TextSize = 18
 				baseTextBtn.TextColor3 = textVanilla
 				baseTextBtn.Text = placeableEnums[i + 1].name
-				if lastCategory ~= nil and string.lower(placeableEnums[i + 1].name) == string.lower(lastCategory.name) then
-					tweenService:Create(baseTextBtn, ti, {
-						TextColor3 = textCoffee,
-					}):Play()
-					tweenService:Create(base, ti, {
-						BackgroundColor3 = vanilla,
-					}):Play()
-					lastSel = baseTextBtn
-					lastFr = base
-				end
 				local function Press()
 					if (lastSel ~= nil and lastFr ~= nil) or (lastSel == baseTextBtn and lastFr == base) then
 						tweenService:Create(lastSel, ti, {
@@ -399,6 +389,7 @@ runService.Heartbeat:Connect(function(deltaTime)
 		end
 	end
 end)
+DrawBuildUICategories()
 local buildUIScreen = (buildUI:WaitForChild("Screen"))
 buildUIScreen.Position = UDim2.fromScale(1, 0)
 userInputService.InputEnded:Connect(function(inputObject, isProcessed)
@@ -422,7 +413,6 @@ userInputService.InputEnded:Connect(function(inputObject, isProcessed)
 						tweenService:Create((buildUI:WaitForChild("Screen")), TweenInfo.new(ti.Time, Enum.EasingStyle.Quad), {
 							Position = UDim2.fromScale(0, 0),
 						}):Play()
-						DrawBuildUICategories()
 					end
 					buildUIEnabled = not buildUIEnabled
 				else

@@ -59,13 +59,6 @@ function DrawBuildUICategories()
             baseTextBtn.TextSize = 18
             baseTextBtn.TextColor3 = textVanilla
             baseTextBtn.Text = placeableEnums[i].name
-            if(lastCategory !== undefined && placeableEnums[i].name.lower() === lastCategory.name.lower())
-            {
-                tweenService.Create(baseTextBtn, ti, {TextColor3: textCoffee}).Play()
-                tweenService.Create(base, ti, {BackgroundColor3: vanilla}).Play()
-                lastSel = baseTextBtn
-                lastFr = base
-            }
             function Press()
             {
                 if((lastSel !== undefined && lastFr !== undefined) || (lastSel === baseTextBtn && lastFr === base))
@@ -260,7 +253,7 @@ runService.Heartbeat.Connect(function(deltaTime)
         }
     }
 })
-
+DrawBuildUICategories()
 let buildUIScreen = (buildUI.WaitForChild("Screen") as Frame)
 buildUIScreen.Position = UDim2.fromScale(1, 0)
 let lastColorPicker: ColorPicker | undefined
@@ -288,7 +281,7 @@ userInputService.InputEnded.Connect(function(inputObject, isProcessed)
                     else
                     {
                         tweenService.Create((buildUI.WaitForChild("Screen") as Frame), new TweenInfo(ti.Time, Enum.EasingStyle.Quad), {Position: UDim2.fromScale(0, 0)}).Play()
-                        DrawBuildUICategories()
+
                     }
                     buildUIEnabled = !buildUIEnabled
                 }
