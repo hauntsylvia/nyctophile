@@ -11,6 +11,7 @@ local textCoffee = _colors.textCoffee
 local textVanilla = _colors.textVanilla
 local vanilla = _colors.vanilla
 local BellaEnum = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "modules", "enums", "bella-enum").BellaEnum
+local uiFillTween = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "modules", "tweens", "tweens").uiFillTween
 local BuildSystem = TS.import(script, script.Parent, "modules", "helpers", "build-system").BuildSystem
 local Draw = TS.import(script, script.Parent, "modules", "helpers", "interactable-draw").Draw
 local Client = TS.import(script, script.Parent, "modules", "net", "lib").Client
@@ -23,13 +24,15 @@ local me = lib:GetMe()
 local node
 local canInteractableHeartbeatRun = true
 local buildUIEnabled = false
-local lastCategory
+local lastColorPicker
+local lastMatPicker
 local buildSystem = BuildSystem.new(lib)
 local buildUI = plr:WaitForChild("PlayerGui"):WaitForChild("BuildingsGUI")
+local buildUIScreen = (buildUI:WaitForChild("Screen"))
+buildUIScreen.Position = UDim2.fromScale(1, 0)
 local runService = game:GetService("RunService")
 local userInputService = game:GetService("UserInputService")
 local tweenService = game:GetService("TweenService")
-local ti = TweenInfo.new(0.075, Enum.EasingStyle.Quint)
 local lastUIS, DrawBuildUIItems
 local function DrawBuildUICategories()
 	local fr = buildUI:WaitForChild("Screen"):WaitForChild("Categorization"):WaitForChild("InternalFrame")
@@ -81,10 +84,10 @@ local function DrawBuildUICategories()
 				baseTextBtn.Text = placeableEnums[i + 1].name
 				local function Press()
 					if (lastSel ~= nil and lastFr ~= nil) or (lastSel == baseTextBtn and lastFr == base) then
-						tweenService:Create(lastSel, ti, {
+						tweenService:Create(lastSel, uiFillTween, {
 							TextColor3 = textVanilla,
 						}):Play()
-						tweenService:Create(lastFr, ti, {
+						tweenService:Create(lastFr, uiFillTween, {
 							BackgroundColor3 = coffee,
 						}):Play()
 					end
@@ -94,12 +97,11 @@ local function DrawBuildUICategories()
 						end
 						buildSystem:Disable()
 					end
-					lastCategory = placeableEnums[i + 1]
 					DrawBuildUIItems(placeableEnums[i + 1])
-					tweenService:Create(baseTextBtn, ti, {
+					tweenService:Create(baseTextBtn, uiFillTween, {
 						TextColor3 = textCoffee,
 					}):Play()
-					tweenService:Create(base, ti, {
+					tweenService:Create(base, uiFillTween, {
 						BackgroundColor3 = vanilla,
 					}):Play()
 					lastSel = baseTextBtn
@@ -112,7 +114,6 @@ local function DrawBuildUICategories()
 		end
 	end
 end
-local lastColorPicker, lastMatPicker
 function DrawBuildUIItems(category)
 	local _result = buildUI:FindFirstChild("Screen")
 	if _result ~= nil then
@@ -150,10 +151,10 @@ function DrawBuildUIItems(category)
 					local _exp = thisChild:GetDescendants()
 					local _arg0 = function(desc)
 						if desc:IsA("GuiButton") then
-							local t = desc:IsA("TextButton") and tweenService:Create(desc, ti, {
+							local t = desc:IsA("TextButton") and tweenService:Create(desc, uiFillTween, {
 								TextTransparency = 1,
 								BackgroundTransparency = 1,
-							}) or tweenService:Create(desc, ti, {
+							}) or tweenService:Create(desc, uiFillTween, {
 								Transparency = 1,
 								BackgroundTransparency = 1,
 							})
@@ -165,19 +166,19 @@ function DrawBuildUIItems(category)
 						_arg0(_v, _k - 1, _exp)
 					end
 					-- ▲ ReadonlyArray.forEach ▲
-					tweenService:Create(thisChild, ti, {
+					tweenService:Create(thisChild, uiFillTween, {
 						Transparency = 1,
 						BackgroundTransparency = 1,
 					}):Play()
 					coroutine.resume(coroutine.create(function()
-						wait(ti.Time)
+						wait(uiFillTween.Time)
 						thisChild:Destroy()
 					end))
 				end
 			end
 		end
 	end
-	wait(ti.Time)
+	wait(uiFillTween.Time)
 	local larry = lib:GetAllPossiblePlaceables()
 	if larry ~= nil and node ~= nil then
 		local lastButtonSel
@@ -227,20 +228,20 @@ function DrawBuildUIItems(category)
 					b.Text = larry[i + 1].config.name
 					b.TextTransparency = 1
 					b.TextColor3 = textVanilla
-					tweenService:Create(placementUIFrame, ti, {
+					tweenService:Create(placementUIFrame, uiFillTween, {
 						BackgroundTransparency = 0,
 						Transparency = 0,
 					}):Play()
-					tweenService:Create(b, ti, {
+					tweenService:Create(b, uiFillTween, {
 						TextTransparency = 0,
 					}):Play()
 					b.MouseButton1Up:Connect(function()
 						if larry ~= nil and #larry > 0 then
 							if lastButtonSel ~= nil and lastFrameSel ~= nil then
-								tweenService:Create(lastFrameSel, ti, {
+								tweenService:Create(lastFrameSel, uiFillTween, {
 									BackgroundColor3 = blackCoffee,
 								}):Play()
-								tweenService:Create(lastButtonSel, ti, {
+								tweenService:Create(lastButtonSel, uiFillTween, {
 									TextColor3 = textVanilla,
 								}):Play()
 							end
@@ -251,10 +252,10 @@ function DrawBuildUIItems(category)
 							lastButtonSel = b
 							buildSystem:Disable()
 							buildSystem:Enable(larry[i + 1], nil, nil, node)
-							tweenService:Create(placementUIFrame, ti, {
+							tweenService:Create(placementUIFrame, uiFillTween, {
 								BackgroundColor3 = vanilla,
 							}):Play()
-							tweenService:Create(b, ti, {
+							tweenService:Create(b, uiFillTween, {
 								TextColor3 = textCoffee,
 							}):Play()
 							local _condition_2 = lastColorPicker
@@ -280,10 +281,10 @@ function DrawBuildUIItems(category)
 								if _condition_4 then
 									local placeable = lib:PlacePlaceable(larry[i + 1], buildSystem.actualResult, lastColorPicker.selectedColor, lastMatPicker.selectedMat)
 									if placeable ~= nil then
-										tweenService:Create(placementUIFrame, ti, {
+										tweenService:Create(placementUIFrame, uiFillTween, {
 											BackgroundColor3 = blackCoffee,
 										}):Play()
-										tweenService:Create(b, ti, {
+										tweenService:Create(b, uiFillTween, {
 											TextColor3 = textVanilla,
 										}):Play()
 										canInteractableHeartbeatRun = true
@@ -390,8 +391,6 @@ runService.Heartbeat:Connect(function(deltaTime)
 	end
 end)
 DrawBuildUICategories()
-local buildUIScreen = (buildUI:WaitForChild("Screen"))
-buildUIScreen.Position = UDim2.fromScale(1, 0)
 userInputService.InputEnded:Connect(function(inputObject, isProcessed)
 	if not isProcessed and me ~= nil then
 		local keySettings = me.playerSettings.playerKeys
@@ -406,11 +405,11 @@ userInputService.InputEnded:Connect(function(inputObject, isProcessed)
 			if not buildSystem.isEnabled then
 				if node ~= nil then
 					if buildUIEnabled then
-						tweenService:Create((buildUI:WaitForChild("Screen")), TweenInfo.new(ti.Time + 0.2, Enum.EasingStyle.Quad), {
+						tweenService:Create((buildUI:WaitForChild("Screen")), TweenInfo.new(uiFillTween.Time + 0.2, Enum.EasingStyle.Quad), {
 							Position = UDim2.fromScale(1, 0),
 						}):Play()
 					else
-						tweenService:Create((buildUI:WaitForChild("Screen")), TweenInfo.new(ti.Time, Enum.EasingStyle.Quad), {
+						tweenService:Create((buildUI:WaitForChild("Screen")), TweenInfo.new(uiFillTween.Time, Enum.EasingStyle.Quad), {
 							Position = UDim2.fromScale(0, 0),
 						}):Play()
 					end

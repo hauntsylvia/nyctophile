@@ -5,6 +5,7 @@ import { Placeable } from "shared/entities/node/placeable";
 import { PlaceableConfig } from "shared/entities/node/placeable-config";
 import { blackCoffee, coffee, textCoffee, textVanilla, vanilla, vanillaHalf } from "shared/modules/colors/colors";
 import { BellaEnum, BellaEnumValue } from "shared/modules/enums/bella-enum";
+import { uiFillTween } from "shared/modules/tweens/tweens";
 import { BuildSystem } from "./modules/helpers/build-system";
 import { Draw } from "./modules/helpers/interactable-draw";
 import { Client } from "./modules/net/lib";
@@ -19,16 +20,17 @@ let me = lib.GetMe()
 let node: Node | undefined
 let canInteractableHeartbeatRun = true
 let buildUIEnabled = false
-let lastCategory: BellaEnumValue | undefined
+let lastColorPicker: ColorPicker | undefined
+let lastMatPicker: MaterialPicker | undefined
 
 const buildSystem = new BuildSystem(lib)
 const buildUI = plr.WaitForChild("PlayerGui").WaitForChild("BuildingsGUI") as ScreenGui
+const buildUIScreen = (buildUI.WaitForChild("Screen") as Frame)
+buildUIScreen.Position = UDim2.fromScale(1, 0)
 
 const runService = game.GetService("RunService")
 const userInputService = game.GetService("UserInputService")
 const tweenService = game.GetService("TweenService")
-
-const ti = new TweenInfo(0.075, Enum.EasingStyle.Quint)
 
 function DrawBuildUICategories()
 {
@@ -63,8 +65,8 @@ function DrawBuildUICategories()
             {
                 if((lastSel !== undefined && lastFr !== undefined) || (lastSel === baseTextBtn && lastFr === base))
                 {
-                    tweenService.Create(lastSel, ti, {TextColor3: textVanilla}).Play()
-                    tweenService.Create(lastFr, ti, {BackgroundColor3: coffee}).Play()
+                    tweenService.Create(lastSel, uiFillTween, {TextColor3: textVanilla}).Play()
+                    tweenService.Create(lastFr, uiFillTween, {BackgroundColor3: coffee}).Play()
                 }
                 if(buildSystem.isEnabled)
                 {
@@ -74,10 +76,9 @@ function DrawBuildUICategories()
                     }
                     buildSystem.Disable()
                 }
-                lastCategory = placeableEnums[i]
                 DrawBuildUIItems(placeableEnums[i])
-                tweenService.Create(baseTextBtn, ti, {TextColor3: textCoffee}).Play()
-                tweenService.Create(base, ti, {BackgroundColor3: vanilla}).Play()
+                tweenService.Create(baseTextBtn, uiFillTween, {TextColor3: textCoffee}).Play()
+                tweenService.Create(base, uiFillTween, {BackgroundColor3: vanilla}).Play()
                 lastSel = baseTextBtn
                 lastFr = base
             }
@@ -103,20 +104,20 @@ function DrawBuildUIItems(category: BellaEnumValue)
                 {
                     if(desc.IsA("GuiButton"))
                     {
-                        let t = desc.IsA("TextButton") ? tweenService.Create(desc, ti, {TextTransparency: 1, BackgroundTransparency: 1}) : tweenService.Create(desc, ti, {Transparency: 1, BackgroundTransparency: 1})
+                        let t = desc.IsA("TextButton") ? tweenService.Create(desc, uiFillTween, {TextTransparency: 1, BackgroundTransparency: 1}) : tweenService.Create(desc, uiFillTween, {Transparency: 1, BackgroundTransparency: 1})
                         t.Play()
                     }
                 })
-                tweenService.Create(thisChild, ti, {Transparency: 1, BackgroundTransparency: 1}).Play()
+                tweenService.Create(thisChild, uiFillTween, {Transparency: 1, BackgroundTransparency: 1}).Play()
                 coroutine.resume(coroutine.create(function()
                 {
-                    wait(ti.Time)
+                    wait(uiFillTween.Time)
                     thisChild.Destroy()
                 }))
             }
         }
     }
-    wait(ti.Time)
+    wait(uiFillTween.Time)
     let larry = lib.GetAllPossiblePlaceables()
     if(larry !== undefined && node !== undefined)
     {
@@ -137,16 +138,16 @@ function DrawBuildUIItems(category: BellaEnumValue)
                 b.Text = larry[i].config.name
                 b.TextTransparency = 1
                 b.TextColor3 = textVanilla
-                tweenService.Create(placementUIFrame, ti, {BackgroundTransparency: 0, Transparency: 0}).Play()
-                tweenService.Create(b, ti, {TextTransparency: 0}).Play()
+                tweenService.Create(placementUIFrame, uiFillTween, {BackgroundTransparency: 0, Transparency: 0}).Play()
+                tweenService.Create(b, uiFillTween, {TextTransparency: 0}).Play()
                 b.MouseButton1Up.Connect(function()
                 {
                     if(larry !== undefined && larry.size() > 0)
                     {
                         if(lastButtonSel !== undefined && lastFrameSel !== undefined)
                         {
-                            tweenService.Create(lastFrameSel, ti, {BackgroundColor3: blackCoffee}).Play()
-                            tweenService.Create(lastButtonSel, ti, {TextColor3: textVanilla}).Play()
+                            tweenService.Create(lastFrameSel, uiFillTween, {BackgroundColor3: blackCoffee}).Play()
+                            tweenService.Create(lastButtonSel, uiFillTween, {TextColor3: textVanilla}).Play()
                         }
                         if(lastUIS !== undefined)
                         {
@@ -156,8 +157,8 @@ function DrawBuildUIItems(category: BellaEnumValue)
                         lastButtonSel = b
                         buildSystem.Disable()
                         buildSystem.Enable(larry[i], undefined, undefined, node)
-                        tweenService.Create(placementUIFrame, ti, {BackgroundColor3: vanilla}).Play()
-                        tweenService.Create(b, ti, {TextColor3: textCoffee}).Play()
+                        tweenService.Create(placementUIFrame, uiFillTween, {BackgroundColor3: vanilla}).Play()
+                        tweenService.Create(b, uiFillTween, {TextColor3: textCoffee}).Play()
                         lastColorPicker = lastColorPicker ?? new ColorPicker(customizeableFrame.FindFirstChild("ColorPicker") as Frame)
                         lastMatPicker = lastMatPicker ?? new MaterialPicker(customizeableFrame.FindFirstChild("MaterialPicker") as Frame)
                         canInteractableHeartbeatRun = false
@@ -168,8 +169,8 @@ function DrawBuildUIItems(category: BellaEnumValue)
                                 let placeable = lib.PlacePlaceable(larry[i], buildSystem.actualResult, lastColorPicker.selectedColor, lastMatPicker.selectedMat)
                                 if(placeable !== undefined)
                                 {
-                                    tweenService.Create(placementUIFrame, ti, {BackgroundColor3: blackCoffee}).Play()
-                                    tweenService.Create(b, ti, {TextColor3: textVanilla}).Play()
+                                    tweenService.Create(placementUIFrame, uiFillTween, {BackgroundColor3: blackCoffee}).Play()
+                                    tweenService.Create(b, uiFillTween, {TextColor3: textVanilla}).Play()
                                     canInteractableHeartbeatRun = true
                                     buildSystem.Disable()
                                     if(lastUIS !== undefined)
@@ -254,10 +255,6 @@ runService.Heartbeat.Connect(function(deltaTime)
     }
 })
 DrawBuildUICategories()
-let buildUIScreen = (buildUI.WaitForChild("Screen") as Frame)
-buildUIScreen.Position = UDim2.fromScale(1, 0)
-let lastColorPicker: ColorPicker | undefined
-let lastMatPicker: MaterialPicker | undefined
 userInputService.InputEnded.Connect(function(inputObject, isProcessed)
 {
     if(!isProcessed && me !== undefined)
@@ -276,11 +273,11 @@ userInputService.InputEnded.Connect(function(inputObject, isProcessed)
                 {
                     if(buildUIEnabled)
                     {
-                        tweenService.Create((buildUI.WaitForChild("Screen") as Frame), new TweenInfo(ti.Time + 0.2, Enum.EasingStyle.Quad), {Position: UDim2.fromScale(1, 0)}).Play()
+                        tweenService.Create((buildUI.WaitForChild("Screen") as Frame), new TweenInfo(uiFillTween.Time + 0.2, Enum.EasingStyle.Quad), {Position: UDim2.fromScale(1, 0)}).Play()
                     }
                     else
                     {
-                        tweenService.Create((buildUI.WaitForChild("Screen") as Frame), new TweenInfo(ti.Time, Enum.EasingStyle.Quad), {Position: UDim2.fromScale(0, 0)}).Play()
+                        tweenService.Create((buildUI.WaitForChild("Screen") as Frame), new TweenInfo(uiFillTween.Time, Enum.EasingStyle.Quad), {Position: UDim2.fromScale(0, 0)}).Play()
 
                     }
                     buildUIEnabled = !buildUIEnabled
