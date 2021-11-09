@@ -7,8 +7,8 @@ import { PlayerState } from "shared/entities/player/player-state"
 const players = new Array<PlayerState>()
 class Database
 {
-    database: GlobalDataStore
-    cache: { [key: string]: any; }
+    private database: GlobalDataStore
+    private cache: { [key: string]: any; }
     constructor(newName?: string)
     {
         let name = newName ?? ("11-02-2021.A.1")
@@ -90,4 +90,4 @@ class Database
         d.SetAsync(tostring(player.userId), player)
     }
 }
-export {Database}
+export { Database }
