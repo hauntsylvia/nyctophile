@@ -230,7 +230,7 @@ class BuildSystem
                     }
                     else if(s.attachedModel.PrimaryPart === undefined)
                     {
-                        error("Primary part removed.")
+                        //error("Primary part removed.")
                     }
                 }
             })
@@ -243,10 +243,6 @@ class BuildSystem
     Disable()
     {
         this.isEnabled = false
-        if(this.attachedModel !== undefined)
-        {
-            this.attachedModel.Destroy()
-        }
         if(this.connection !== undefined)
         {
             this.connection.Disconnect()
@@ -261,7 +257,35 @@ class BuildSystem
         }
         for(let i = 0; i < this.allRenderedNodes.size(); i++)
         {
-            this.allRenderedNodes[i].Destroy()
+            let modelsDescendants = this.allRenderedNodes[i].GetDescendants()
+            for(let i = 0; i < modelsDescendants.size(); i++)
+            {
+                if(modelsDescendants[i].IsA("BasePart"))
+                {
+                    let thisPart = modelsDescendants[i] as BasePart
+                    tweenService.Create(thisPart, new TweenInfo(0.1), {Transparency: 1}).Play()
+                }
+            }
+            let f = this
+            coroutine.resume(coroutine.create(function()
+            {
+                wait(0.1)
+                f.allRenderedNodes[i].Destroy()
+            }))
+        }
+        if(this.attachedModel !== undefined)
+        {
+            let modelsDescendants = this.attachedModel.GetDescendants()
+            for(let i = 0; i < modelsDescendants.size(); i++)
+            {
+                if(modelsDescendants[i].IsA("BasePart"))
+                {
+                    let thisPart = modelsDescendants[i] as BasePart
+                    tweenService.Create(thisPart, new TweenInfo(0.1), {Transparency: 1}).Play()
+                }
+            }
+            wait(0.1)
+            this.attachedModel.Destroy()
         }
     }
 }

@@ -16,7 +16,7 @@ class Placeable
     }
     GetCustomizeableParts()
     {
-        let toReturn = new Array<BasePart>()
+        let toReturn = new Array<Instance>()
         let d = this.attachedModel.GetDescendants()
         for(let i = 0; i < d.size(); i++)
         {
@@ -25,11 +25,11 @@ class Placeable
             {
                 if(thisDescendant.Parent !== undefined)
                 {
-                    let theseChildren = thisDescendant.Parent.GetChildren()
+                    let theseChildren = thisDescendant.Parent.GetDescendants()
                     for(let childrenOf = 0; childrenOf < theseChildren.size(); childrenOf++)
                     {
                         let thisChild = theseChildren[childrenOf]
-                        if(thisChild.IsA("BasePart"))
+                        if(thisChild.IsA("BasePart") || thisChild.IsA("Light"))
                         {
                             toReturn.push(thisChild)
                         }

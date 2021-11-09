@@ -35,7 +35,7 @@ do
 				local thisDescendant = d[i + 1]
 				if thisDescendant:IsA("Configuration") and thisDescendant.Parent ~= self.attachedModel then
 					if thisDescendant.Parent ~= nil then
-						local theseChildren = thisDescendant.Parent:GetChildren()
+						local theseChildren = thisDescendant.Parent:GetDescendants()
 						do
 							local childrenOf = 0
 							local _shouldIncrement_1 = false
@@ -49,7 +49,7 @@ do
 									break
 								end
 								local thisChild = theseChildren[childrenOf + 1]
-								if thisChild:IsA("BasePart") then
+								if thisChild:IsA("BasePart") or thisChild:IsA("Light") then
 									local _toReturn = toReturn
 									local _thisChild = thisChild
 									-- ▼ Array.push ▼

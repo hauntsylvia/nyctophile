@@ -1,10 +1,9 @@
 -- Compiled with roblox-ts v1.2.7
 local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
 local Placeable = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "node", "placeable").Placeable
-local _placeable_config = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "node", "placeable-config")
-local PlaceableCategories = _placeable_config.PlaceableCategories
-local PlaceableConfig = _placeable_config.PlaceableConfig
-local defaultPlaceableConfig = PlaceableConfig.new(10, "Placeable", "A generic placeable.", 5, PlaceableCategories.Misc)
+local PlaceableConfig = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "node", "placeable-config").PlaceableConfig
+local BellaEnum = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "modules", "enums", "bella-enum").BellaEnum
+local defaultPlaceableConfig = PlaceableConfig.new(10, "Placeable", "A generic placeable.", 5, BellaEnum.placeableCategories:TryParse("misc"))
 local NodeHelper
 do
 	NodeHelper = setmetatable({}, {
@@ -26,10 +25,22 @@ do
 			local configFolder = fullConfigFolder:WaitForChild("Placeable")
 			if configFolder ~= nil and configFolder:IsA("Configuration") then
 				local placeableConfig = PlaceableConfig.new(defaultPlaceableConfig.cost, defaultPlaceableConfig.name, defaultPlaceableConfig.description, defaultPlaceableConfig.maxOfThisAllowed, defaultPlaceableConfig.placeableCategory)
-				placeableConfig.cost = (configFolder:FindFirstChild("Cost")).Value
-				placeableConfig.maxOfThisAllowed = (configFolder:FindFirstChild("MaxAllowed")).Value
-				placeableConfig.description = (configFolder:FindFirstChild("Description")).Value
-				placeableConfig.name = (configFolder:FindFirstChild("Name")).Value
+				local categoryV = configFolder:FindFirstChild("Category")
+				local nameV = configFolder:FindFirstChild("Name")
+				local descriptionV = configFolder:FindFirstChild("Description")
+				local maxAllowedV = configFolder:FindFirstChild("MaxAllowed")
+				local costV = configFolder:FindFirstChild("Cost")
+				local _result
+				if (categoryV ~= nil and categoryV:IsA("StringValue")) then
+					_result = BellaEnum.placeableCategories:TryParse(categoryV.Value)
+				else
+					_result = nil
+				end
+				placeableConfig.placeableCategory = _result
+				placeableConfig.name = (nameV ~= nil and nameV:IsA("StringValue")) and nameV.Value or "unknown"
+				placeableConfig.description = (descriptionV ~= nil and descriptionV:IsA("StringValue")) and descriptionV.Value or "unknown"
+				placeableConfig.maxOfThisAllowed = (maxAllowedV ~= nil and maxAllowedV:IsA("NumberValue")) and maxAllowedV.Value or 0
+				placeableConfig.cost = (costV ~= nil and costV:IsA("NumberValue")) and costV.Value or 0
 				return placeableConfig
 			end
 		end

@@ -71,7 +71,6 @@ class InternalClient
 {
     Send<T>(lower: string, upper: string, args: any)
     {
-        print(`${lower}/${upper}`)
         let myEvents = game.GetService("ReplicatedStorage").WaitForChild("player")
         let serversEvent = game.GetService("ReplicatedStorage").WaitForChild("api").WaitForChild("func")
         if(serversEvent.IsA("RemoteFunction"))

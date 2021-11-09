@@ -51,7 +51,7 @@ function Internal_CustomizePlaceable(placeable: Placeable, color?: Color3, mat?:
     let custParts = placeable.GetCustomizeableParts()
     custParts.forEach(part =>
         {
-            if(color !== undefined)
+            if(color !== undefined && (part.IsA("Light") || part.IsA("BasePart")))
             {
                 if(tween)
                 {
@@ -62,7 +62,7 @@ function Internal_CustomizePlaceable(placeable: Placeable, color?: Color3, mat?:
                     part.Color = color
                 }
             }
-            if(mat !== undefined)
+            if(mat !== undefined && part.IsA("BasePart"))
             {
                 part.Material = mat
             }

@@ -1,4 +1,11 @@
 -- Compiled with roblox-ts v1.2.7
+local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
+local _colors = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "modules", "colors", "colors")
+local blackCoffee = _colors.blackCoffee
+local textCoffee = _colors.textCoffee
+local textVanilla = _colors.textVanilla
+local vanilla = _colors.vanilla
+local ts = game:GetService("TweenService")
 local function RadToDegree(x)
 	return ((x + math.pi) / (2 * math.pi)) * 360
 end
@@ -32,22 +39,29 @@ do
 		list.FillDirection = Enum.FillDirection.Horizontal
 		list.Name = "ui list"
 		list.VerticalAlignment = Enum.VerticalAlignment.Center
-		list.Padding = UDim.new(0.25, 0)
+		list.Padding = UDim.new(0, 14)
 		local defaultSetter = Instance.new("TextButton")
 		defaultSetter.Parent = self.thisFrame
 		defaultSetter.Name = "defaultSetter"
 		defaultSetter.BorderSizePixel = 0
-		defaultSetter.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 		defaultSetter.Text = "Default Color"
-		defaultSetter.TextSize = 18
+		defaultSetter.TextSize = 19
 		defaultSetter.TextScaled = false
+		defaultSetter.Font = Enum.Font.SourceSansSemibold
 		defaultSetter.TextXAlignment = Enum.TextXAlignment.Center
-		defaultSetter.TextColor3 = Color3.fromRGB(180, 180, 180)
-		defaultSetter.Size = UDim2.fromScale(0.4, 0.4)
-		defaultSetter.Position = UDim2.new(0.025, 0, 0.025, 0)
+		defaultSetter.Size = UDim2.fromScale(0.55, 0.55)
 		defaultSetter.Visible = true
 		defaultSetter.AnchorPoint = Vector2.new(0.5, 0.5)
 		defaultSetter.Position = UDim2.fromScale(0.5, 0.5)
+		defaultSetter.AutoButtonColor = false
+		local defaultSetterCorner = Instance.new("UICorner")
+		defaultSetterCorner.Parent = defaultSetter
+		defaultSetterCorner.Name = "corner"
+		defaultSetterCorner.CornerRadius = UDim.new(0.2, 0)
+		local defaultSetterAspectRatio = Instance.new("UIAspectRatioConstraint")
+		defaultSetterAspectRatio.Parent = defaultSetter
+		defaultSetterAspectRatio.AspectRatio = 3
+		defaultSetterAspectRatio.Name = "a"
 		local colorFrame = Instance.new("Frame")
 		colorFrame.Parent = self.thisFrame
 		colorFrame.Name = "color frame"
@@ -112,6 +126,18 @@ do
 		_rainbow[_length + 7] = _arg6
 		-- ▲ Array.push ▲
 		local fakeThis = self
+		local lastSelectedColor = Color3.fromRGB(0, 0, 0)
+		local function DefaultSetterMB1Up()
+			ts:Create(defaultSetter, TweenInfo.new(0.075, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
+				TextColor3 = (fakeThis.selectedColor == nil and textCoffee or textVanilla),
+				BackgroundColor3 = (fakeThis.selectedColor ~= nil and blackCoffee or vanilla),
+			}):Play()
+		end
+		DefaultSetterMB1Up()
+		defaultSetter.MouseButton1Up:Connect(function()
+			fakeThis.selectedColor = fakeThis.selectedColor == nil and lastSelectedColor or nil
+			DefaultSetterMB1Up()
+		end)
 		decal.MouseButton1Up:Connect(function()
 			local mouseLoc = game:GetService("Players").LocalPlayer:GetMouse()
 			local pos = UDim2.fromOffset(mouseLoc.X, mouseLoc.Y)
@@ -143,9 +169,8 @@ do
 			local hue = RadToDegree(phi) / 360
 			local saturation = len / r
 			fakeThis.selectedColor = Color3.fromHSV(hue, saturation, 1)
-		end)
-		defaultSetter.MouseButton1Up:Connect(function()
-			fakeThis.selectedColor = nil
+			lastSelectedColor = Color3.fromHSV(hue, saturation, 1)
+			DefaultSetterMB1Up()
 		end)
 	end
 	function ColorPicker:Disable()

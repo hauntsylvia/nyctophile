@@ -1,4 +1,9 @@
 -- Compiled with roblox-ts v1.2.7
+local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
+local _colors = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "modules", "colors", "colors")
+local coffee = _colors.coffee
+local textVanilla = _colors.textVanilla
+local vanillaHalf = _colors.vanillaHalf
 local MaterialPicker
 do
 	MaterialPicker = setmetatable({}, {
@@ -30,17 +35,21 @@ do
 		box.Parent = self.thisFrame
 		box.Name = "box"
 		box.BorderSizePixel = 0
-		box.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+		box.BackgroundColor3 = coffee
 		box.PlaceholderText = "Default Material"
-		box.PlaceholderColor3 = Color3.fromRGB(50, 50, 50)
+		box.PlaceholderColor3 = vanillaHalf
 		box.Text = ""
 		box.TextSize = 18
 		box.TextScaled = false
 		box.ClearTextOnFocus = false
 		box.TextXAlignment = Enum.TextXAlignment.Center
-		box.TextColor3 = Color3.fromRGB(180, 180, 180)
+		box.TextColor3 = textVanilla
 		box.Size = UDim2.fromScale(1, 1)
 		box.Visible = true
+		local boxCorner = Instance.new("UICorner")
+		boxCorner.Parent = box
+		boxCorner.Name = "corner"
+		boxCorner.CornerRadius = UDim.new(1, 0)
 		local corner = Instance.new("UICorner")
 		corner.Parent = box
 		corner.Name = "corner"

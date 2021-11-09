@@ -1,11 +1,13 @@
+import { BellaEnumValue } from "shared/modules/enums/bella-enum"
+
 class PlaceableConfig
 {
     cost: number
     name: string
     description: string
     maxOfThisAllowed: number
-    placeableCategory: PlaceableCategories
-    constructor(cost: number, name: string, description: string, maxOfThisAllowed: number, placeableCategory: PlaceableCategories)
+    placeableCategory: BellaEnumValue | undefined
+    constructor(cost: number, name: string, description: string, maxOfThisAllowed: number, placeableCategory?: BellaEnumValue)
     {
         this.cost = cost
         this.name = name
@@ -14,13 +16,4 @@ class PlaceableConfig
         this.placeableCategory = placeableCategory
     }
 }
-enum PlaceableCategories
-{
-    Furniture,
-    Production,
-    Defense,
-    Lighting,
-    
-    Misc
-}
-export { PlaceableConfig, PlaceableCategories }
+export { PlaceableConfig }

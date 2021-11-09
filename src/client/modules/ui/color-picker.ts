@@ -1,3 +1,6 @@
+import { blackCoffee, textCoffee, textVanilla, vanilla } from "shared/modules/colors/colors";
+
+const ts = game.GetService("TweenService")
 function RadToDegree(x: number)
 {
     return ((x + math.pi) / (2 * math.pi)) * 360;
@@ -27,23 +30,32 @@ class ColorPicker
         list.FillDirection = Enum.FillDirection.Horizontal
         list.Name = "ui list"
         list.VerticalAlignment = Enum.VerticalAlignment.Center
-        list.Padding = new UDim(0.25, 0)
+        list.Padding = new UDim(0, 14)
 
         let defaultSetter = new Instance("TextButton")
         defaultSetter.Parent = this.thisFrame
         defaultSetter.Name = "defaultSetter"
         defaultSetter.BorderSizePixel = 0
-        defaultSetter.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
         defaultSetter.Text = "Default Color"
-        defaultSetter.TextSize = 18
+        defaultSetter.TextSize = 19
         defaultSetter.TextScaled = false
+        defaultSetter.Font = Enum.Font.SourceSansSemibold
         defaultSetter.TextXAlignment = Enum.TextXAlignment.Center
-        defaultSetter.TextColor3 = Color3.fromRGB(180, 180, 180)
-        defaultSetter.Size = UDim2.fromScale(0.4, 0.4)
-        defaultSetter.Position = new UDim2(0.025, 0, 0.025, 0)
+        defaultSetter.Size = UDim2.fromScale(0.55, 0.55)
         defaultSetter.Visible = true
         defaultSetter.AnchorPoint = new Vector2(0.5, 0.5)
         defaultSetter.Position = UDim2.fromScale(0.5, 0.5)
+        defaultSetter.AutoButtonColor = false
+
+        let defaultSetterCorner = new Instance("UICorner")
+        defaultSetterCorner.Parent = defaultSetter
+        defaultSetterCorner.Name = "corner"
+        defaultSetterCorner.CornerRadius = new UDim(0.2, 0)
+
+        let defaultSetterAspectRatio = new Instance("UIAspectRatioConstraint")
+        defaultSetterAspectRatio.Parent = defaultSetter
+        defaultSetterAspectRatio.AspectRatio = 3
+        defaultSetterAspectRatio.Name = "a"
         
         let colorFrame = new Instance("Frame")
         colorFrame.Parent = this.thisFrame
@@ -66,8 +78,6 @@ class ColorPicker
         aspectRatio.Parent = colorFrame
         aspectRatio.AspectRatio = 1
         aspectRatio.Name = "a"
-
-
         
         let picker = new Instance("Frame")
         picker.Parent = colorFrame
@@ -102,6 +112,21 @@ class ColorPicker
         rainbow.push(Color3.fromRGB(255, 0 , 0), Color3.fromRGB(255, 127, 0), Color3.fromRGB(255, 255, 0), Color3.fromRGB(0, 255, 0), Color3.fromRGB(0, 0, 255), Color3.fromRGB(75, 0, 130), Color3.fromRGB(148, 0, 211))
        
         let fakeThis = this
+        let lastSelectedColor: Color3 = Color3.fromRGB(0, 0, 0)
+        function DefaultSetterMB1Up()
+        {
+            ts.Create(defaultSetter, new TweenInfo(0.075, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), 
+            {
+                TextColor3: (fakeThis.selectedColor === undefined ? textCoffee : textVanilla), 
+                BackgroundColor3: (fakeThis.selectedColor !== undefined ? blackCoffee : vanilla)
+            }).Play()
+        }
+        DefaultSetterMB1Up()
+        defaultSetter.MouseButton1Up.Connect(function()
+        {        
+            fakeThis.selectedColor = fakeThis.selectedColor === undefined ? lastSelectedColor : undefined
+            DefaultSetterMB1Up()    
+        })
         decal.MouseButton1Up.Connect(function()
         {
             let mouseLoc =      game.GetService("Players").LocalPlayer.GetMouse()
@@ -125,13 +150,10 @@ class ColorPicker
             let hue =                       RadToDegree(phi) / (360) 
             let saturation =                len / r;
             fakeThis.selectedColor =        Color3.fromHSV(hue, saturation, 1)
-
+            lastSelectedColor =             Color3.fromHSV(hue, saturation, 1)
+            DefaultSetterMB1Up()
         })
         
-        defaultSetter.MouseButton1Up.Connect(function()
-        {
-            fakeThis.selectedColor = undefined
-        })
     }
     Disable()
     {
