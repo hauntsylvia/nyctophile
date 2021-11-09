@@ -1,8 +1,10 @@
 import { Node } from "shared/entities/node/node"
 import { Placeable } from "shared/entities/node/placeable"
-import { PlaceableCategories, PlaceableConfig } from "shared/entities/node/placeable-config"
+import { PlaceableConfig } from "shared/entities/node/placeable-config"
+import { BellaEnum } from "shared/modules/enums/bella-enum"
 
-const defaultPlaceableConfig = new PlaceableConfig(10, "Placeable", "A generic placeable.", 5, PlaceableCategories.Misc)
+
+const defaultPlaceableConfig = new PlaceableConfig(10, "Placeable", "A generic placeable.", 5, BellaEnum.placeableCategories.TryParse("misc"))
 
 class NodeHelper
 {
@@ -27,10 +29,17 @@ class NodeHelper
                     defaultPlaceableConfig.maxOfThisAllowed, 
                     defaultPlaceableConfig.placeableCategory
                 )
-                placeableConfig.cost = (configFolder.FindFirstChild("Cost") as NumberValue).Value
-                placeableConfig.maxOfThisAllowed = (configFolder.FindFirstChild("MaxAllowed") as NumberValue).Value
-                placeableConfig.description = (configFolder.FindFirstChild("Description") as StringValue).Value
-                placeableConfig.name = (configFolder.FindFirstChild("Name") as StringValue).Value
+                let categoryV =         configFolder.FindFirstChild("Category")             
+                let nameV =             configFolder.FindFirstChild("Name")
+                let descriptionV =      configFolder.FindFirstChild("Description")
+                let maxAllowedV =       configFolder.FindFirstChild("MaxAllowed")
+                let costV =             configFolder.FindFirstChild("Cost")
+                
+                placeableConfig.placeableCategory   = (categoryV !== undefined && categoryV.IsA("StringValue")) ? BellaEnum.placeableCategories.TryParse(categoryV.Value) : undefined
+                placeableConfig.name                = (nameV !== undefined && nameV.IsA("StringValue")) ? nameV.Value : "unknown"
+                placeableConfig.description         = (descriptionV !== undefined && descriptionV.IsA("StringValue")) ? descriptionV.Value : "unknown"
+                placeableConfig.maxOfThisAllowed    = (maxAllowedV !== undefined && maxAllowedV.IsA("NumberValue")) ? maxAllowedV.Value : 0
+                placeableConfig.cost                = (costV !== undefined && costV.IsA("NumberValue")) ? costV.Value : 0
                 return placeableConfig
             }
         }

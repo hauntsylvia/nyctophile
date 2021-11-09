@@ -1,3 +1,5 @@
+import { coffee, textVanilla, vanilla, vanillaHalf } from "shared/modules/colors/colors"
+
 class MaterialPicker
 {
     private mats: Array<Enum.Material>
@@ -26,17 +28,22 @@ class MaterialPicker
         box.Parent = this.thisFrame
         box.Name = "box"
         box.BorderSizePixel = 0
-        box.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+        box.BackgroundColor3 = coffee
         box.PlaceholderText = "Default Material"
-        box.PlaceholderColor3 = Color3.fromRGB(50, 50, 50)
+        box.PlaceholderColor3 = vanillaHalf
         box.Text = ""
         box.TextSize = 18
         box.TextScaled = false
         box.ClearTextOnFocus = false
         box.TextXAlignment = Enum.TextXAlignment.Center
-        box.TextColor3 = Color3.fromRGB(180, 180, 180)
+        box.TextColor3 = textVanilla
         box.Size = UDim2.fromScale(1, 1)
         box.Visible = true
+
+        let boxCorner = new Instance("UICorner")
+        boxCorner.Parent = box
+        boxCorner.Name = "corner"
+        boxCorner.CornerRadius = new UDim(1, 0)
 
         let corner = new Instance("UICorner")
         corner.Parent = box
