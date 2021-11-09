@@ -19,6 +19,7 @@ let me = lib.GetMe()
 let node: Node | undefined
 let canInteractableHeartbeatRun = true
 let buildUIEnabled = false
+let lastCategory: BellaEnumValue | undefined
 
 const buildSystem = new BuildSystem(lib)
 const buildUI = plr.WaitForChild("PlayerGui").WaitForChild("BuildingsGUI") as ScreenGui
@@ -58,6 +59,13 @@ function DrawBuildUICategories()
             baseTextBtn.TextSize = 18
             baseTextBtn.TextColor3 = textVanilla
             baseTextBtn.Text = placeableEnums[i].name
+            if(lastCategory !== undefined && placeableEnums[i].name.lower() === lastCategory.name.lower())
+            {
+                tweenService.Create(baseTextBtn, ti, {TextColor3: textCoffee}).Play()
+                tweenService.Create(base, ti, {BackgroundColor3: vanilla}).Play()
+                lastSel = baseTextBtn
+                lastFr = base
+            }
             function Press()
             {
                 if((lastSel !== undefined && lastFr !== undefined) || (lastSel === baseTextBtn && lastFr === base))
@@ -73,11 +81,12 @@ function DrawBuildUICategories()
                     }
                     buildSystem.Disable()
                 }
+                lastCategory = placeableEnums[i]
+                DrawBuildUIItems(placeableEnums[i])
                 tweenService.Create(baseTextBtn, ti, {TextColor3: textCoffee}).Play()
                 tweenService.Create(base, ti, {BackgroundColor3: vanilla}).Play()
                 lastSel = baseTextBtn
                 lastFr = base
-                DrawBuildUIItems(placeableEnums[i])
             }
             baseTextBtn.MouseButton1Up.Connect(Press)
             baseImageBtn.MouseButton1Up.Connect(Press)

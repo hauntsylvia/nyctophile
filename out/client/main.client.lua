@@ -23,6 +23,7 @@ local me = lib:GetMe()
 local node
 local canInteractableHeartbeatRun = true
 local buildUIEnabled = false
+local lastCategory
 local buildSystem = BuildSystem.new(lib)
 local buildUI = plr:WaitForChild("PlayerGui"):WaitForChild("BuildingsGUI")
 local runService = game:GetService("RunService")
@@ -78,6 +79,16 @@ local function DrawBuildUICategories()
 				baseTextBtn.TextSize = 18
 				baseTextBtn.TextColor3 = textVanilla
 				baseTextBtn.Text = placeableEnums[i + 1].name
+				if lastCategory ~= nil and string.lower(placeableEnums[i + 1].name) == string.lower(lastCategory.name) then
+					tweenService:Create(baseTextBtn, ti, {
+						TextColor3 = textCoffee,
+					}):Play()
+					tweenService:Create(base, ti, {
+						BackgroundColor3 = vanilla,
+					}):Play()
+					lastSel = baseTextBtn
+					lastFr = base
+				end
 				local function Press()
 					if (lastSel ~= nil and lastFr ~= nil) or (lastSel == baseTextBtn and lastFr == base) then
 						tweenService:Create(lastSel, ti, {
@@ -93,6 +104,8 @@ local function DrawBuildUICategories()
 						end
 						buildSystem:Disable()
 					end
+					lastCategory = placeableEnums[i + 1]
+					DrawBuildUIItems(placeableEnums[i + 1])
 					tweenService:Create(baseTextBtn, ti, {
 						TextColor3 = textCoffee,
 					}):Play()
@@ -101,7 +114,6 @@ local function DrawBuildUICategories()
 					}):Play()
 					lastSel = baseTextBtn
 					lastFr = base
-					DrawBuildUIItems(placeableEnums[i + 1])
 				end
 				baseTextBtn.MouseButton1Up:Connect(Press)
 				baseImageBtn.MouseButton1Up:Connect(Press)
