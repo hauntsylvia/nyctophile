@@ -12,11 +12,13 @@ import { ColorPicker } from "./modules/ui/color-picker";
 import { MaterialPicker } from "./modules/ui/material-picker";
 
 const lib = new Client()
+const plr = game.GetService("Players").LocalPlayer
 
 let draws = new Array<Draw>()
-let plr = game.GetService("Players").LocalPlayer
 let me = lib.GetMe()
 let node: Node | undefined
+let canInteractableHeartbeatRun = true
+let buildUIEnabled = false
 
 const buildSystem = new BuildSystem(lib)
 const buildUI = plr.WaitForChild("PlayerGui").WaitForChild("BuildingsGUI") as ScreenGui
@@ -27,7 +29,6 @@ const tweenService = game.GetService("TweenService")
 
 const ti = new TweenInfo(0.075, Enum.EasingStyle.Quint)
 
-let canInteractableHeartbeatRun = true
 function DrawBuildUICategories()
 {
     let fr = buildUI.WaitForChild("Screen").WaitForChild("Categorization").WaitForChild("InternalFrame")
@@ -64,6 +65,14 @@ function DrawBuildUICategories()
                     tweenService.Create(lastSel, ti, {TextColor3: textVanilla}).Play()
                     tweenService.Create(lastFr, ti, {BackgroundColor3: coffee}).Play()
                 }
+                if(buildSystem.isEnabled)
+                {
+                    if(lastUIS !== undefined)
+                    {
+                        lastUIS.Disconnect()
+                    }
+                    buildSystem.Disable()
+                }
                 tweenService.Create(baseTextBtn, ti, {TextColor3: textCoffee}).Play()
                 tweenService.Create(base, ti, {BackgroundColor3: vanilla}).Play()
                 lastSel = baseTextBtn
@@ -75,6 +84,7 @@ function DrawBuildUICategories()
         }
     }
 }
+let lastUIS: RBXScriptConnection | undefined
 function DrawBuildUIItems(category: BellaEnumValue)
 {
     let customizeableFrame = buildUI.FindFirstChild("Screen")?.FindFirstChild("Customization") as Frame
@@ -112,26 +122,33 @@ function DrawBuildUIItems(category: BellaEnumValue)
         let lastFrameSel:   Frame | undefined
         for(let i = 0; i < larry.size(); i++)
         {
-            if(larry[i].config.placeableCategory === category || (larry[i].config.placeableCategory === undefined && category === BellaEnum.placeableCategories.TryParse("misc")))
+            if((larry[i].config.placeableCategory !== undefined && category.name === larry[i].config.placeableCategory?.name) || (larry[i].config.placeableCategory === undefined && category === BellaEnum.placeableCategories.TryParse("misc")))
             {
                 let placementUIFrame = scrollFrame?.FindFirstChild("A")?.Clone() as Frame
                 placementUIFrame.Parent = scrollFrame
                 placementUIFrame.Visible = true
                 placementUIFrame.Name = "_"
                 placementUIFrame.BackgroundTransparency = 1
-                placementUIFrame.BackgroundColor3 = coffee
-                tweenService.Create(placementUIFrame, ti, {BackgroundTransparency: 0}).Play()
+                placementUIFrame.BackgroundColor3 = blackCoffee
                 let b = placementUIFrame.FindFirstChild("B") as TextButton
+                b.Font = Enum.Font.SourceSansItalic
                 b.Text = larry[i].config.name
+                b.TextTransparency = 1
                 b.TextColor3 = textVanilla
+                tweenService.Create(placementUIFrame, ti, {BackgroundTransparency: 0, Transparency: 0}).Play()
+                tweenService.Create(b, ti, {TextTransparency: 0}).Play()
                 b.MouseButton1Up.Connect(function()
                 {
                     if(larry !== undefined && larry.size() > 0)
                     {
                         if(lastButtonSel !== undefined && lastFrameSel !== undefined)
                         {
-                            tweenService.Create(lastFrameSel, ti, {BackgroundColor3: coffee}).Play()
+                            tweenService.Create(lastFrameSel, ti, {BackgroundColor3: blackCoffee}).Play()
                             tweenService.Create(lastButtonSel, ti, {TextColor3: textVanilla}).Play()
+                        }
+                        if(lastUIS !== undefined)
+                        {
+                            lastUIS.Disconnect()
                         }
                         lastFrameSel = placementUIFrame
                         lastButtonSel = b
@@ -142,18 +159,21 @@ function DrawBuildUIItems(category: BellaEnumValue)
                         lastColorPicker = lastColorPicker ?? new ColorPicker(customizeableFrame.FindFirstChild("ColorPicker") as Frame)
                         lastMatPicker = lastMatPicker ?? new MaterialPicker(customizeableFrame.FindFirstChild("MaterialPicker") as Frame)
                         canInteractableHeartbeatRun = false
-                        let uisEv = userInputService.InputEnded.Connect(function(inputObj, isProcessed)
+                        lastUIS = userInputService.InputEnded.Connect(function(inputObj, isProcessed)
                         {
-                            if(!isProcessed && inputObj.UserInputType === Enum.UserInputType.MouseButton1 && larry !== undefined && lastColorPicker !== undefined && lastMatPicker !== undefined && buildSystem.isEnabled)
+                            if(!isProcessed && inputObj.UserInputType === Enum.UserInputType.MouseButton1 && larry !== undefined && lastColorPicker !== undefined && lastMatPicker !== undefined && buildSystem.isEnabled && lastUIS?.Connected)
                             {
                                 let placeable = lib.PlacePlaceable(larry[i], buildSystem.actualResult, lastColorPicker.selectedColor, lastMatPicker.selectedMat)
                                 if(placeable !== undefined)
                                 {
-                                    tweenService.Create(placementUIFrame, ti, {BackgroundColor3: coffee}).Play()
+                                    tweenService.Create(placementUIFrame, ti, {BackgroundColor3: blackCoffee}).Play()
                                     tweenService.Create(b, ti, {TextColor3: textVanilla}).Play()
                                     canInteractableHeartbeatRun = true
                                     buildSystem.Disable()
-                                    uisEv.Disconnect()
+                                    if(lastUIS !== undefined)
+                                    {
+                                        lastUIS.Disconnect()
+                                    }
                                 }
                             }
                         })
@@ -231,6 +251,9 @@ runService.Heartbeat.Connect(function(deltaTime)
         }
     }
 })
+
+let buildUIScreen = (buildUI.WaitForChild("Screen") as Frame)
+buildUIScreen.Position = UDim2.fromScale(1, 0)
 let lastColorPicker: ColorPicker | undefined
 let lastMatPicker: MaterialPicker | undefined
 userInputService.InputEnded.Connect(function(inputObject, isProcessed)
@@ -244,17 +267,21 @@ userInputService.InputEnded.Connect(function(inputObject, isProcessed)
         }
         else if(inputObject.KeyCode.Name === keySettings.buildSystemKey)
         {
-            let selfNode = node ?? lib.GetNode()
-            node = selfNode
+            node = node ?? lib.GetNode()
             if(!buildSystem.isEnabled)
             {
-                if(selfNode !== undefined)
+                if(node !== undefined)
                 {
-                    buildUI.Enabled = !buildUI.Enabled
-                    if(buildUI.Enabled)
+                    if(buildUIEnabled)
                     {
+                        tweenService.Create((buildUI.WaitForChild("Screen") as Frame), new TweenInfo(ti.Time + 0.2, Enum.EasingStyle.Quad), {Position: UDim2.fromScale(1, 0)}).Play()
+                    }
+                    else
+                    {
+                        tweenService.Create((buildUI.WaitForChild("Screen") as Frame), new TweenInfo(ti.Time, Enum.EasingStyle.Quad), {Position: UDim2.fromScale(0, 0)}).Play()
                         DrawBuildUICategories()
                     }
+                    buildUIEnabled = !buildUIEnabled
                 }
                 else
                 {
@@ -264,6 +291,10 @@ userInputService.InputEnded.Connect(function(inputObject, isProcessed)
             }
             else
             {
+                if(lastUIS !== undefined)
+                {
+                    lastUIS.Disconnect()
+                }
                 buildSystem.Disable()
             }
         }

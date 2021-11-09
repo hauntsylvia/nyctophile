@@ -321,7 +321,6 @@ do
 							s.attachedModel:SetPrimaryPartCFrame(fakePosition)
 						end
 					elseif s.attachedModel.PrimaryPart == nil then
-						error("Primary part removed.")
 					end
 				end
 			end)
@@ -331,9 +330,6 @@ do
 	end
 	function BuildSystem:Disable()
 		self.isEnabled = false
-		if self.attachedModel ~= nil then
-			self.attachedModel:Destroy()
-		end
 		if self.connection ~= nil then
 			self.connection:Disconnect()
 		end
@@ -344,9 +340,10 @@ do
 			self.uisContConnection:Disconnect()
 		end
 		do
-			local i = 0
+			local _i = 0
 			local _shouldIncrement = false
 			while true do
+				local i = _i
 				if _shouldIncrement then
 					i += 1
 				else
@@ -355,8 +352,59 @@ do
 				if not (i < #self.allRenderedNodes) then
 					break
 				end
-				self.allRenderedNodes[i + 1]:Destroy()
+				local modelsDescendants = self.allRenderedNodes[i + 1]:GetDescendants()
+				do
+					local i = 0
+					local _shouldIncrement_1 = false
+					while true do
+						if _shouldIncrement_1 then
+							i += 1
+						else
+							_shouldIncrement_1 = true
+						end
+						if not (i < #modelsDescendants) then
+							break
+						end
+						if modelsDescendants[i + 1]:IsA("BasePart") then
+							local thisPart = modelsDescendants[i + 1]
+							tweenService:Create(thisPart, TweenInfo.new(0.1), {
+								Transparency = 1,
+							}):Play()
+						end
+					end
+				end
+				local f = self
+				coroutine.resume(coroutine.create(function()
+					wait(0.1)
+					f.allRenderedNodes[i + 1]:Destroy()
+				end))
+				_i = i
 			end
+		end
+		if self.attachedModel ~= nil then
+			local modelsDescendants = self.attachedModel:GetDescendants()
+			do
+				local i = 0
+				local _shouldIncrement = false
+				while true do
+					if _shouldIncrement then
+						i += 1
+					else
+						_shouldIncrement = true
+					end
+					if not (i < #modelsDescendants) then
+						break
+					end
+					if modelsDescendants[i + 1]:IsA("BasePart") then
+						local thisPart = modelsDescendants[i + 1]
+						tweenService:Create(thisPart, TweenInfo.new(0.1), {
+							Transparency = 1,
+						}):Play()
+					end
+				end
+			end
+			wait(0.1)
+			self.attachedModel:Destroy()
 		end
 	end
 end

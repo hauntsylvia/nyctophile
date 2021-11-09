@@ -52,7 +52,7 @@ local function Internal_CustomizePlaceable(placeable, color, mat, tween)
 	local custParts = placeable:GetCustomizeableParts()
 	local _custParts = custParts
 	local _arg0 = function(part)
-		if color ~= nil then
+		if color ~= nil and (part:IsA("Light") or part:IsA("BasePart")) then
 			if tween then
 				tweenService:Create(part, TweenInfo.new(0.4), {
 					Color = color,
@@ -61,7 +61,7 @@ local function Internal_CustomizePlaceable(placeable, color, mat, tween)
 				part.Color = color
 			end
 		end
-		if mat ~= nil then
+		if mat ~= nil and part:IsA("BasePart") then
 			part.Material = mat
 		end
 	end

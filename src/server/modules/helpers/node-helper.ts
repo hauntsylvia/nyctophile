@@ -34,7 +34,6 @@ class NodeHelper
                 let descriptionV =      configFolder.FindFirstChild("Description")
                 let maxAllowedV =       configFolder.FindFirstChild("MaxAllowed")
                 let costV =             configFolder.FindFirstChild("Cost")
-                
                 placeableConfig.placeableCategory   = (categoryV !== undefined && categoryV.IsA("StringValue")) ? BellaEnum.placeableCategories.TryParse(categoryV.Value) : undefined
                 placeableConfig.name                = (nameV !== undefined && nameV.IsA("StringValue")) ? nameV.Value : "unknown"
                 placeableConfig.description         = (descriptionV !== undefined && descriptionV.IsA("StringValue")) ? descriptionV.Value : "unknown"

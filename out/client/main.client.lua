@@ -5,6 +5,7 @@ local NodeConfig = TS.import(script, game:GetService("ReplicatedStorage"), "TS",
 local Placeable = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "node", "placeable").Placeable
 local PlaceableConfig = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "node", "placeable-config").PlaceableConfig
 local _colors = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "modules", "colors", "colors")
+local blackCoffee = _colors.blackCoffee
 local coffee = _colors.coffee
 local textCoffee = _colors.textCoffee
 local textVanilla = _colors.textVanilla
@@ -16,18 +17,19 @@ local Client = TS.import(script, script.Parent, "modules", "net", "lib").Client
 local ColorPicker = TS.import(script, script.Parent, "modules", "ui", "color-picker").ColorPicker
 local MaterialPicker = TS.import(script, script.Parent, "modules", "ui", "material-picker").MaterialPicker
 local lib = Client.new()
-local draws = {}
 local plr = game:GetService("Players").LocalPlayer
+local draws = {}
 local me = lib:GetMe()
 local node
+local canInteractableHeartbeatRun = true
+local buildUIEnabled = false
 local buildSystem = BuildSystem.new(lib)
 local buildUI = plr:WaitForChild("PlayerGui"):WaitForChild("BuildingsGUI")
 local runService = game:GetService("RunService")
 local userInputService = game:GetService("UserInputService")
 local tweenService = game:GetService("TweenService")
 local ti = TweenInfo.new(0.075, Enum.EasingStyle.Quint)
-local canInteractableHeartbeatRun = true
-local DrawBuildUIItems
+local lastUIS, DrawBuildUIItems
 local function DrawBuildUICategories()
 	local fr = buildUI:WaitForChild("Screen"):WaitForChild("Categorization"):WaitForChild("InternalFrame")
 	if fr ~= nil and fr:IsA("Frame") then
@@ -84,6 +86,12 @@ local function DrawBuildUICategories()
 						tweenService:Create(lastFr, ti, {
 							BackgroundColor3 = coffee,
 						}):Play()
+					end
+					if buildSystem.isEnabled then
+						if lastUIS ~= nil then
+							lastUIS:Disconnect()
+						end
+						buildSystem:Disable()
 					end
 					tweenService:Create(baseTextBtn, ti, {
 						TextColor3 = textCoffee,
@@ -185,7 +193,20 @@ function DrawBuildUIItems(category)
 				if not (i < #larry) then
 					break
 				end
-				if larry[i + 1].config.placeableCategory == category or (larry[i + 1].config.placeableCategory == nil and category == BellaEnum.placeableCategories:TryParse("misc")) then
+				local _condition = larry[i + 1].config.placeableCategory ~= nil
+				if _condition then
+					local _exp = category.name
+					local _result_2 = larry[i + 1].config.placeableCategory
+					if _result_2 ~= nil then
+						_result_2 = _result_2.name
+					end
+					_condition = _exp == _result_2
+				end
+				local _condition_1 = _condition
+				if not _condition_1 then
+					_condition_1 = (larry[i + 1].config.placeableCategory == nil and category == BellaEnum.placeableCategories:TryParse("misc"))
+				end
+				if _condition_1 then
 					local _result_2 = scrollFrame
 					if _result_2 ~= nil then
 						_result_2 = _result_2:FindFirstChild("A")
@@ -198,22 +219,31 @@ function DrawBuildUIItems(category)
 					placementUIFrame.Visible = true
 					placementUIFrame.Name = "_"
 					placementUIFrame.BackgroundTransparency = 1
-					placementUIFrame.BackgroundColor3 = coffee
+					placementUIFrame.BackgroundColor3 = blackCoffee
+					local b = placementUIFrame:FindFirstChild("B")
+					b.Font = Enum.Font.SourceSansItalic
+					b.Text = larry[i + 1].config.name
+					b.TextTransparency = 1
+					b.TextColor3 = textVanilla
 					tweenService:Create(placementUIFrame, ti, {
 						BackgroundTransparency = 0,
+						Transparency = 0,
 					}):Play()
-					local b = placementUIFrame:FindFirstChild("B")
-					b.Text = larry[i + 1].config.name
-					b.TextColor3 = textVanilla
+					tweenService:Create(b, ti, {
+						TextTransparency = 0,
+					}):Play()
 					b.MouseButton1Up:Connect(function()
 						if larry ~= nil and #larry > 0 then
 							if lastButtonSel ~= nil and lastFrameSel ~= nil then
 								tweenService:Create(lastFrameSel, ti, {
-									BackgroundColor3 = coffee,
+									BackgroundColor3 = blackCoffee,
 								}):Play()
 								tweenService:Create(lastButtonSel, ti, {
 									TextColor3 = textVanilla,
 								}):Play()
+							end
+							if lastUIS ~= nil then
+								lastUIS:Disconnect()
 							end
 							lastFrameSel = placementUIFrame
 							lastButtonSel = b
@@ -225,31 +255,40 @@ function DrawBuildUIItems(category)
 							tweenService:Create(b, ti, {
 								TextColor3 = textCoffee,
 							}):Play()
-							local _condition = lastColorPicker
-							if _condition == nil then
-								_condition = ColorPicker.new(customizeableFrame:FindFirstChild("ColorPicker"))
+							local _condition_2 = lastColorPicker
+							if _condition_2 == nil then
+								_condition_2 = ColorPicker.new(customizeableFrame:FindFirstChild("ColorPicker"))
 							end
-							lastColorPicker = _condition
-							local _condition_1 = lastMatPicker
-							if _condition_1 == nil then
-								_condition_1 = MaterialPicker.new(customizeableFrame:FindFirstChild("MaterialPicker"))
+							lastColorPicker = _condition_2
+							local _condition_3 = lastMatPicker
+							if _condition_3 == nil then
+								_condition_3 = MaterialPicker.new(customizeableFrame:FindFirstChild("MaterialPicker"))
 							end
-							lastMatPicker = _condition_1
+							lastMatPicker = _condition_3
 							canInteractableHeartbeatRun = false
-							local uisEv
-							uisEv = userInputService.InputEnded:Connect(function(inputObj, isProcessed)
-								if not isProcessed and (inputObj.UserInputType == Enum.UserInputType.MouseButton1 and (larry ~= nil and (lastColorPicker ~= nil and (lastMatPicker ~= nil and buildSystem.isEnabled)))) then
+							lastUIS = userInputService.InputEnded:Connect(function(inputObj, isProcessed)
+								local _condition_4 = not isProcessed and (inputObj.UserInputType == Enum.UserInputType.MouseButton1 and (larry ~= nil and (lastColorPicker ~= nil and (lastMatPicker ~= nil and buildSystem.isEnabled))))
+								if _condition_4 then
+									local _result_3 = lastUIS
+									if _result_3 ~= nil then
+										_result_3 = _result_3.Connected
+									end
+									_condition_4 = _result_3
+								end
+								if _condition_4 then
 									local placeable = lib:PlacePlaceable(larry[i + 1], buildSystem.actualResult, lastColorPicker.selectedColor, lastMatPicker.selectedMat)
 									if placeable ~= nil then
 										tweenService:Create(placementUIFrame, ti, {
-											BackgroundColor3 = coffee,
+											BackgroundColor3 = blackCoffee,
 										}):Play()
 										tweenService:Create(b, ti, {
 											TextColor3 = textVanilla,
 										}):Play()
 										canInteractableHeartbeatRun = true
 										buildSystem:Disable()
-										uisEv:Disconnect()
+										if lastUIS ~= nil then
+											lastUIS:Disconnect()
+										end
 									end
 								end
 							end)
@@ -348,6 +387,8 @@ runService.Heartbeat:Connect(function(deltaTime)
 		end
 	end
 end)
+local buildUIScreen = (buildUI:WaitForChild("Screen"))
+buildUIScreen.Position = UDim2.fromScale(1, 0)
 userInputService.InputEnded:Connect(function(inputObject, isProcessed)
 	if not isProcessed and me ~= nil then
 		local keySettings = me.playerSettings.playerKeys
@@ -358,19 +399,28 @@ userInputService.InputEnded:Connect(function(inputObject, isProcessed)
 			if _condition == nil then
 				_condition = lib:GetNode()
 			end
-			local selfNode = _condition
-			node = selfNode
+			node = _condition
 			if not buildSystem.isEnabled then
-				if selfNode ~= nil then
-					buildUI.Enabled = not buildUI.Enabled
-					if buildUI.Enabled then
+				if node ~= nil then
+					if buildUIEnabled then
+						tweenService:Create((buildUI:WaitForChild("Screen")), TweenInfo.new(ti.Time + 0.2, Enum.EasingStyle.Quad), {
+							Position = UDim2.fromScale(1, 0),
+						}):Play()
+					else
+						tweenService:Create((buildUI:WaitForChild("Screen")), TweenInfo.new(ti.Time, Enum.EasingStyle.Quad), {
+							Position = UDim2.fromScale(0, 0),
+						}):Play()
 						DrawBuildUICategories()
 					end
+					buildUIEnabled = not buildUIEnabled
 				else
 					local acceptInpType = Enum.UserInputType.MouseButton1
 					buildSystem:Enable(Placeable.new(Node.new(me.userId, Vector3.new(0, 0, 0), NodeConfig.new(0, {})), buildSystem:MakeNodeRepresentation(), PlaceableConfig.new(1, "", "", 0, nil), 0), acceptInpType)
 				end
 			else
+				if lastUIS ~= nil then
+					lastUIS:Disconnect()
+				end
 				buildSystem:Disable()
 			end
 		end
