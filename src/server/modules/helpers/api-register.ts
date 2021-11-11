@@ -1,7 +1,7 @@
 const apiDirectory = game.GetService("ServerStorage").WaitForChild("api")
 class APIRegister
 {
-    _service: Instance
+    _service: Folder
     constructor(service: string)
     {
         let serviceFolder = apiDirectory.FindFirstChild(service)

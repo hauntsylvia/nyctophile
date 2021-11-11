@@ -1,8 +1,8 @@
 export {}
 import { Database } from "server/modules/helpers/database"
 import { InteractableHelper } from "server/modules/helpers/interactable-helper"
-import { Interactable } from "shared/entities/interactable"
-import { InteractableConfig } from "shared/entities/interactable-config"
+import { Interactable } from "shared/entities/interactable/interactable"
+import { InteractableConfig } from "shared/entities/interactable/interactable-config"
 let h = new InteractableHelper()
 const db = new Database()
 let allCrates = game.GetService("Workspace").WaitForChild("Crates").GetChildren()

@@ -2,8 +2,8 @@
 local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
 local Database = TS.import(script, game:GetService("ServerScriptService"), "TS", "modules", "helpers", "database").Database
 local InteractableHelper = TS.import(script, game:GetService("ServerScriptService"), "TS", "modules", "helpers", "interactable-helper").InteractableHelper
-local Interactable = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "interactable").Interactable
-local InteractableConfig = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "interactable-config").InteractableConfig
+local Interactable = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "interactable", "interactable").Interactable
+local InteractableConfig = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "interactable", "interactable-config").InteractableConfig
 local h = InteractableHelper.new()
 local db = Database.new()
 local allCrates = game:GetService("Workspace"):WaitForChild("Crates"):GetChildren()

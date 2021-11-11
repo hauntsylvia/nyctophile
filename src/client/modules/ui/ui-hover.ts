@@ -1,4 +1,4 @@
-import { coffee, vanilla, vanillaHalf } from "shared/modules/colors/colors"
+import { blackCoffee, coffee, vanilla, vanillaHalf } from "shared/modules/colors/colors"
 import { uiFillTween } from "shared/modules/tweens/tween"
 
 const m = math.floor
@@ -6,19 +6,21 @@ const tweenService = game.GetService("TweenService")
 
 class UIHover
 {
-    constructor(hoverOver: GuiButton | GuiLabel, title: string, text: string)
+    private scrUI: ScreenGui
+    constructor(hoverOver: GuiObject, title: string, text: string)
     {
         let screenUI = new Instance("ScreenGui")
         screenUI.Name = "hover"
         screenUI.Parent = game.GetService("Players").LocalPlayer.WaitForChild("PlayerGui")
         screenUI.Enabled = true
+        this.scrUI = screenUI
         let hoverFrame = new Instance("Frame")
         hoverFrame.Parent = screenUI
         hoverFrame.BackgroundTransparency = 1
         hoverFrame.BorderSizePixel = 0
-        hoverFrame.BackgroundColor3 = coffee
+        hoverFrame.BackgroundColor3 = blackCoffee
         hoverFrame.Name = "hover frame"
-        hoverFrame.Size = UDim2.fromScale(0.1, 0.1)
+        hoverFrame.Size = UDim2.fromScale(0.175, 0.175)
         let uiAspect = new Instance("UIAspectRatioConstraint")
         uiAspect.Parent = hoverFrame
         uiAspect.AspectRatio = 3
@@ -37,7 +39,7 @@ class UIHover
         titleLabel.Parent = hoverFrame
         titleLabel.Visible = true
         titleLabel.RichText = true
-        titleLabel.Text = `<font size="9" color="rgb(${m(vanilla.R*255)}, ${m(vanilla.G*255)}, ${m(vanilla.B*255)})">${title}</font>`
+        titleLabel.Text = `<font size="11" color="rgb(${m(vanilla.R*255)}, ${m(vanilla.G*255)}, ${m(vanilla.B*255)})">${title}</font>`
         titleLabel.BackgroundTransparency = 1
         titleLabel.TextTransparency = 1
         titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -59,7 +61,7 @@ class UIHover
         label.Parent = hoverFrame
         label.Visible = true
         label.RichText = true
-        label.Text = `<font size="7" color="rgb(${m(vanillaHalf.R*255)}, ${m(vanillaHalf.G*255)}, ${m(vanillaHalf.B*255)})">${text}</font>`
+        label.Text = `<font size="9" color="rgb(${m(vanillaHalf.R*255)}, ${m(vanillaHalf.G*255)}, ${m(vanillaHalf.B*255)})">${text}</font>`
         label.BackgroundTransparency = 1
         label.TextTransparency = 1
         label.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -101,6 +103,10 @@ class UIHover
         }
         hoverOver.MouseEnter.Connect(Hover)
         hoverOver.MouseLeave.Connect(Hover)
+    }
+    Dispose()
+    {
+        this.scrUI.Destroy()
     }
 }
 

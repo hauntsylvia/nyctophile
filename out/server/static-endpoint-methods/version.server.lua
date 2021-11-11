@@ -1,7 +1,7 @@
 -- Compiled with roblox-ts v1.2.7
 local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
 local Database = TS.import(script, game:GetService("ServerScriptService"), "TS", "modules", "helpers", "database").Database
-local APIRegister = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "modules", "api-register").APIRegister
+local APIRegister = TS.import(script, game:GetService("ServerScriptService"), "TS", "modules", "helpers", "api-register").APIRegister
 local APIResult = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "api", "api-result").APIResult
 local NyctoVersion = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "entities", "nycto-version").NyctoVersion
 local thisService = APIRegister.new("version")

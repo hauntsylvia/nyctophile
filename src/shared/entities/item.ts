@@ -1,5 +1,5 @@
-import { Interactable } from "./interactable"
-import { InteractableConfig } from "./interactable-config"
+import { Interactable } from "./interactable/interactable"
+import { InteractableConfig } from "./interactable/interactable-config"
 import { PlayerState } from "./player/player-state"
 
 class Item

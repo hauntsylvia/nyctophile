@@ -1,4 +1,4 @@
-import { Interactable } from "shared/entities/interactable";
+import { Interactable } from "shared/entities/interactable/interactable";
 import { Node } from "shared/entities/node/node";
 import { NodeConfig } from "shared/entities/node/node-config";
 import { Placeable } from "shared/entities/node/placeable";
@@ -11,6 +11,7 @@ import { Draw } from "./modules/helpers/interactable-draw";
 import { Client } from "./modules/net/lib";
 import { ColorPicker } from "./modules/ui/color-picker";
 import { MaterialPicker } from "./modules/ui/material-picker";
+import { UIHover } from "./modules/ui/ui-hover";
 import { VersionDisplayLabel } from "./modules/ui/version-display";
 
 const lib = new Client()
@@ -19,7 +20,6 @@ const plr = game.GetService("Players").LocalPlayer
 let draws = new Array<Draw>()
 let me = lib.GetMe()
 let node: Node | undefined
-let canInteractableHeartbeatRun = true
 let buildUIEnabled = false
 let lastColorPicker: ColorPicker | undefined
 let lastMatPicker: MaterialPicker | undefined
@@ -94,11 +94,16 @@ function DrawBuildUICategories()
     }
 }
 let lastUIS: RBXScriptConnection | undefined
+let allUIHovers = new Array<UIHover>()
 function DrawBuildUIItems(category: BellaEnumValue)
 {
     let customizeableFrame = buildUI.FindFirstChild("Screen")?.FindFirstChild("Customization") as Frame
     let scrollFrame = buildUI.FindFirstChild("Screen")?.FindFirstChild("Placeables")?.FindFirstChild("Placeables") as ScrollingFrame
     let children = scrollFrame?.GetChildren()
+    for(let i = 0; i < allUIHovers.size(); i++)
+    {
+        allUIHovers[i].Dispose()
+    }
     if(children !== undefined)
     {
         for(let i = 0; i < children.size(); i++)
@@ -139,6 +144,8 @@ function DrawBuildUIItems(category: BellaEnumValue)
                 placementUIFrame.Name = "_"
                 placementUIFrame.BackgroundTransparency = 1
                 placementUIFrame.BackgroundColor3 = blackCoffee
+                let uiHvr = new UIHover(placementUIFrame, larry[i].config.name, `[$${larry[i].config.cost}]\n${larry[i].config.description}`)
+                allUIHovers.push(uiHvr)
                 let b = placementUIFrame.FindFirstChild("B") as TextButton
                 b.Font = Enum.Font.SourceSansItalic
                 b.Text = larry[i].config.name
@@ -167,7 +174,6 @@ function DrawBuildUIItems(category: BellaEnumValue)
                         tweenService.Create(b, uiFillTween, {TextColor3: textCoffee}).Play()
                         lastColorPicker = lastColorPicker ?? new ColorPicker(customizeableFrame.FindFirstChild("ColorPicker") as Frame)
                         lastMatPicker = lastMatPicker ?? new MaterialPicker(customizeableFrame.FindFirstChild("MaterialPicker") as Frame)
-                        canInteractableHeartbeatRun = false
                         lastUIS = userInputService.InputEnded.Connect(function(inputObj, isProcessed)
                         {
                             if(!isProcessed && inputObj.UserInputType === Enum.UserInputType.MouseButton1 && larry !== undefined && lastColorPicker !== undefined && lastMatPicker !== undefined && buildSystem.isEnabled && lastUIS?.Connected)
@@ -177,7 +183,6 @@ function DrawBuildUIItems(category: BellaEnumValue)
                                 {
                                     tweenService.Create(placementUIFrame, uiFillTween, {BackgroundColor3: blackCoffee}).Play()
                                     tweenService.Create(b, uiFillTween, {TextColor3: textVanilla}).Play()
-                                    canInteractableHeartbeatRun = true
                                     buildSystem.Disable()
                                     if(lastUIS !== undefined)
                                     {
@@ -226,7 +231,7 @@ function EvaluateInteractables()
 let closestDraw: Draw | undefined = undefined
 runService.Heartbeat.Connect(function(deltaTime)
 {
-    if(draws.size() > 0 && canInteractableHeartbeatRun)
+    if(draws.size() > 0 && !buildSystem.isEnabled)
     {
         for(let i = 0; i < draws.size(); i++)
         {
@@ -252,21 +257,24 @@ runService.Heartbeat.Connect(function(deltaTime)
             closestDraw.Enable(true, plr)
         }
     }
-    else
+    else if(buildSystem.isEnabled)
     {
-        if(closestDraw !== undefined)
+        for(let i = 0; i < draws.size(); i++)
         {
-            closestDraw.Disable()
+            let int = draws[i]
+            if(int !== undefined)
+            {
+                int.Disable()
+            }
         }
     }
 })
-DrawBuildUICategories()
 userInputService.InputEnded.Connect(function(inputObject, isProcessed)
 {
     if(!isProcessed && me !== undefined)
     {
         let keySettings = me.playerSettings.playerKeys
-        if(inputObject.KeyCode.Name === keySettings.interactKey && closestDraw !== undefined && closestDraw.IsInRange(plr) && canInteractableHeartbeatRun)
+        if(inputObject.KeyCode.Name === keySettings.interactKey && closestDraw !== undefined && closestDraw.IsInRange(plr) && !buildSystem.isEnabled)
         {
             closestDraw.Interact()
         }
@@ -279,11 +287,11 @@ userInputService.InputEnded.Connect(function(inputObject, isProcessed)
                 {
                     if(buildUIEnabled)
                     {
-                        tweenService.Create((buildUI.WaitForChild("Screen") as Frame), new TweenInfo(uiFillTween.Time + 0.2, Enum.EasingStyle.Quad), {Position: UDim2.fromScale(1, 0)}).Play()
+                        tweenService.Create((buildUI.WaitForChild("Screen") as Frame), new TweenInfo(uiFillTween.Time, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Position: UDim2.fromScale(1, 0)}).Play()
                     }
                     else
                     {
-                        tweenService.Create((buildUI.WaitForChild("Screen") as Frame), new TweenInfo(uiFillTween.Time, Enum.EasingStyle.Quad), {Position: UDim2.fromScale(0, 0)}).Play()
+                        tweenService.Create((buildUI.WaitForChild("Screen") as Frame), new TweenInfo(uiFillTween.Time, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Position: UDim2.fromScale(0, 0)}).Play()
 
                     }
                     buildUIEnabled = !buildUIEnabled
@@ -305,6 +313,7 @@ userInputService.InputEnded.Connect(function(inputObject, isProcessed)
         }
     }
 })
+DrawBuildUICategories()
 EvaluateInteractables()
 while(wait(120))
 {

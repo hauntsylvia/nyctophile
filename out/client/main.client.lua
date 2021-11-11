@@ -17,13 +17,13 @@ local Draw = TS.import(script, script.Parent, "modules", "helpers", "interactabl
 local Client = TS.import(script, script.Parent, "modules", "net", "lib").Client
 local ColorPicker = TS.import(script, script.Parent, "modules", "ui", "color-picker").ColorPicker
 local MaterialPicker = TS.import(script, script.Parent, "modules", "ui", "material-picker").MaterialPicker
+local UIHover = TS.import(script, script.Parent, "modules", "ui", "ui-hover").UIHover
 local VersionDisplayLabel = TS.import(script, script.Parent, "modules", "ui", "version-display").VersionDisplayLabel
 local lib = Client.new()
 local plr = game:GetService("Players").LocalPlayer
 local draws = {}
 local me = lib:GetMe()
 local node
-local canInteractableHeartbeatRun = true
 local buildUIEnabled = false
 local lastColorPicker
 local lastMatPicker
@@ -119,6 +119,7 @@ local function DrawBuildUICategories()
 		end
 	end
 end
+local allUIHovers = {}
 function DrawBuildUIItems(category)
 	local _result = buildUI:FindFirstChild("Screen")
 	if _result ~= nil then
@@ -138,6 +139,21 @@ function DrawBuildUIItems(category)
 		_children = _children:GetChildren()
 	end
 	local children = _children
+	do
+		local i = 0
+		local _shouldIncrement = false
+		while true do
+			if _shouldIncrement then
+				i += 1
+			else
+				_shouldIncrement = true
+			end
+			if not (i < #allUIHovers) then
+				break
+			end
+			allUIHovers[i + 1]:Dispose()
+		end
+	end
 	if children ~= nil then
 		do
 			local i = 0
@@ -228,6 +244,12 @@ function DrawBuildUIItems(category)
 					placementUIFrame.Name = "_"
 					placementUIFrame.BackgroundTransparency = 1
 					placementUIFrame.BackgroundColor3 = blackCoffee
+					local uiHvr = UIHover.new(placementUIFrame, larry[i + 1].config.name, "[$" .. (tostring(larry[i + 1].config.cost) .. ("]\n" .. larry[i + 1].config.description)))
+					local _allUIHovers = allUIHovers
+					local _uiHvr = uiHvr
+					-- ▼ Array.push ▼
+					_allUIHovers[#_allUIHovers + 1] = _uiHvr
+					-- ▲ Array.push ▲
 					local b = placementUIFrame:FindFirstChild("B")
 					b.Font = Enum.Font.SourceSansItalic
 					b.Text = larry[i + 1].config.name
@@ -273,7 +295,6 @@ function DrawBuildUIItems(category)
 								_condition_3 = MaterialPicker.new(customizeableFrame:FindFirstChild("MaterialPicker"))
 							end
 							lastMatPicker = _condition_3
-							canInteractableHeartbeatRun = false
 							lastUIS = userInputService.InputEnded:Connect(function(inputObj, isProcessed)
 								local _condition_4 = not isProcessed and (inputObj.UserInputType == Enum.UserInputType.MouseButton1 and (larry ~= nil and (lastColorPicker ~= nil and (lastMatPicker ~= nil and buildSystem.isEnabled))))
 								if _condition_4 then
@@ -292,7 +313,6 @@ function DrawBuildUIItems(category)
 										tweenService:Create(b, uiFillTween, {
 											TextColor3 = textVanilla,
 										}):Play()
-										canInteractableHeartbeatRun = true
 										buildSystem:Disable()
 										if lastUIS ~= nil then
 											lastUIS:Disconnect()
@@ -359,7 +379,7 @@ local function EvaluateInteractables()
 end
 local closestDraw = nil
 runService.Heartbeat:Connect(function(deltaTime)
-	if #draws > 0 and canInteractableHeartbeatRun then
+	if #draws > 0 and not buildSystem.isEnabled then
 		do
 			local i = 0
 			local _shouldIncrement = false
@@ -389,17 +409,31 @@ runService.Heartbeat:Connect(function(deltaTime)
 		if closestDraw ~= nil and not closestDraw.isEnabled then
 			closestDraw:Enable(true, plr)
 		end
-	else
-		if closestDraw ~= nil then
-			closestDraw:Disable()
+	elseif buildSystem.isEnabled then
+		do
+			local i = 0
+			local _shouldIncrement = false
+			while true do
+				if _shouldIncrement then
+					i += 1
+				else
+					_shouldIncrement = true
+				end
+				if not (i < #draws) then
+					break
+				end
+				local int = draws[i + 1]
+				if int ~= nil then
+					int:Disable()
+				end
+			end
 		end
 	end
 end)
-DrawBuildUICategories()
 userInputService.InputEnded:Connect(function(inputObject, isProcessed)
 	if not isProcessed and me ~= nil then
 		local keySettings = me.playerSettings.playerKeys
-		if inputObject.KeyCode.Name == keySettings.interactKey and (closestDraw ~= nil and (closestDraw:IsInRange(plr) and canInteractableHeartbeatRun)) then
+		if inputObject.KeyCode.Name == keySettings.interactKey and (closestDraw ~= nil and (closestDraw:IsInRange(plr) and not buildSystem.isEnabled)) then
 			closestDraw:Interact()
 		elseif inputObject.KeyCode.Name == keySettings.buildSystemKey then
 			local _condition = node
@@ -410,11 +444,11 @@ userInputService.InputEnded:Connect(function(inputObject, isProcessed)
 			if not buildSystem.isEnabled then
 				if node ~= nil then
 					if buildUIEnabled then
-						tweenService:Create((buildUI:WaitForChild("Screen")), TweenInfo.new(uiFillTween.Time + 0.2, Enum.EasingStyle.Quad), {
+						tweenService:Create((buildUI:WaitForChild("Screen")), TweenInfo.new(uiFillTween.Time, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
 							Position = UDim2.fromScale(1, 0),
 						}):Play()
 					else
-						tweenService:Create((buildUI:WaitForChild("Screen")), TweenInfo.new(uiFillTween.Time, Enum.EasingStyle.Quad), {
+						tweenService:Create((buildUI:WaitForChild("Screen")), TweenInfo.new(uiFillTween.Time, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
 							Position = UDim2.fromScale(0, 0),
 						}):Play()
 					end
@@ -432,6 +466,7 @@ userInputService.InputEnded:Connect(function(inputObject, isProcessed)
 		end
 	end
 end)
+DrawBuildUICategories()
 EvaluateInteractables()
 while { wait(120) } do
 	EvaluateInteractables()

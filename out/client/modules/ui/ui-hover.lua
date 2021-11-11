@@ -1,7 +1,7 @@
 -- Compiled with roblox-ts v1.2.7
 local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
 local _colors = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "modules", "colors", "colors")
-local coffee = _colors.coffee
+local blackCoffee = _colors.blackCoffee
 local vanilla = _colors.vanilla
 local vanillaHalf = _colors.vanillaHalf
 local uiFillTween = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "modules", "tweens", "tween").uiFillTween
@@ -24,13 +24,14 @@ do
 		screenUI.Name = "hover"
 		screenUI.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 		screenUI.Enabled = true
+		self.scrUI = screenUI
 		local hoverFrame = Instance.new("Frame")
 		hoverFrame.Parent = screenUI
 		hoverFrame.BackgroundTransparency = 1
 		hoverFrame.BorderSizePixel = 0
-		hoverFrame.BackgroundColor3 = coffee
+		hoverFrame.BackgroundColor3 = blackCoffee
 		hoverFrame.Name = "hover frame"
-		hoverFrame.Size = UDim2.fromScale(0.1, 0.1)
+		hoverFrame.Size = UDim2.fromScale(0.175, 0.175)
 		local uiAspect = Instance.new("UIAspectRatioConstraint")
 		uiAspect.Parent = hoverFrame
 		uiAspect.AspectRatio = 3
@@ -49,7 +50,7 @@ do
 		titleLabel.Parent = hoverFrame
 		titleLabel.Visible = true
 		titleLabel.RichText = true
-		titleLabel.Text = '<font size="9" color="rgb(' .. (tostring(m(vanilla.R * 255)) .. (", " .. (tostring(m(vanilla.G * 255)) .. (", " .. (tostring(m(vanilla.B * 255)) .. (')">' .. (title .. "</font>")))))))
+		titleLabel.Text = '<font size="11" color="rgb(' .. (tostring(m(vanilla.R * 255)) .. (", " .. (tostring(m(vanilla.G * 255)) .. (", " .. (tostring(m(vanilla.B * 255)) .. (')">' .. (title .. "</font>")))))))
 		titleLabel.BackgroundTransparency = 1
 		titleLabel.TextTransparency = 1
 		titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -71,7 +72,7 @@ do
 		label.Parent = hoverFrame
 		label.Visible = true
 		label.RichText = true
-		label.Text = '<font size="7" color="rgb(' .. (tostring(m(vanillaHalf.R * 255)) .. (", " .. (tostring(m(vanillaHalf.G * 255)) .. (", " .. (tostring(m(vanillaHalf.B * 255)) .. (')">' .. (text .. "</font>")))))))
+		label.Text = '<font size="9" color="rgb(' .. (tostring(m(vanillaHalf.R * 255)) .. (", " .. (tostring(m(vanillaHalf.G * 255)) .. (", " .. (tostring(m(vanillaHalf.B * 255)) .. (')">' .. (text .. "</font>")))))))
 		label.BackgroundTransparency = 1
 		label.TextTransparency = 1
 		label.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -116,6 +117,9 @@ do
 		end
 		hoverOver.MouseEnter:Connect(Hover)
 		hoverOver.MouseLeave:Connect(Hover)
+	end
+	function UIHover:Dispose()
+		self.scrUI:Destroy()
 	end
 end
 return {

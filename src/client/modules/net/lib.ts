@@ -1,5 +1,5 @@
 import { APIResult } from "shared/api/api-result"
-import { Interactable } from "shared/entities/interactable"
+import { Interactable } from "shared/entities/interactable/interactable"
 import { Node } from "shared/entities/node/node"
 import { Placeable } from "shared/entities/node/placeable"
 import { NyctoVersion } from "shared/entities/nycto-version"

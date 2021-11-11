@@ -1,4 +1,4 @@
-import { Interactable } from "shared/entities/interactable"
+import { Interactable } from "shared/entities/interactable/interactable"
 import { PlayerState } from "shared/entities/player/player-state"
 
 const allInteractablesRegistered = new Array<Interactable>()
