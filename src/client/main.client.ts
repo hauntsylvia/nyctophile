@@ -5,12 +5,13 @@ import { Placeable } from "shared/entities/node/placeable";
 import { PlaceableConfig } from "shared/entities/node/placeable-config";
 import { blackCoffee, coffee, textCoffee, textVanilla, vanilla, vanillaHalf } from "shared/modules/colors/colors";
 import { BellaEnum, BellaEnumValue } from "shared/modules/enums/bella-enum";
-import { uiFillTween } from "shared/modules/tweens/tweens";
+import { uiFillTween } from "shared/modules/tweens/tween";
 import { BuildSystem } from "./modules/helpers/build-system";
 import { Draw } from "./modules/helpers/interactable-draw";
 import { Client } from "./modules/net/lib";
 import { ColorPicker } from "./modules/ui/color-picker";
 import { MaterialPicker } from "./modules/ui/material-picker";
+import { VersionDisplayLabel } from "./modules/ui/version-display";
 
 const lib = new Client()
 const plr = game.GetService("Players").LocalPlayer
@@ -32,6 +33,11 @@ const runService = game.GetService("RunService")
 const userInputService = game.GetService("UserInputService")
 const tweenService = game.GetService("TweenService")
 
+function VersionDisplay()
+{
+    let versDisplay = new VersionDisplayLabel(lib.gameVersion)
+}
+VersionDisplay()
 function DrawBuildUICategories()
 {
     let fr = buildUI.WaitForChild("Screen").WaitForChild("Categorization").WaitForChild("InternalFrame")

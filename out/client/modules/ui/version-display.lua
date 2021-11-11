@@ -3,6 +3,8 @@ local TS = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_incl
 local _colors = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "modules", "colors", "colors")
 local vanilla = _colors.vanilla
 local vanillaHalf = _colors.vanillaHalf
+local UIHover = TS.import(script, script.Parent, "ui-hover").UIHover
+local m = math.floor
 local VersionDisplayLabel
 do
 	VersionDisplayLabel = setmetatable({}, {
@@ -21,23 +23,19 @@ do
 		screenUI.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 		screenUI.Enabled = true
 		local label = Instance.new("TextLabel")
+		label.RichText = true
+		label.Position = UDim2.fromScale(0.9, 0.95)
+		label.Size = UDim2.fromScale(0.1, 0.05)
 		label.Name = "version"
 		label.Parent = screenUI
 		label.Visible = true
-		label.RichText = true
-		label.Text = [[
-        <font size="11" color="rgb(]] .. (tostring(vanilla.R) .. (", " .. (tostring(vanilla.G) .. (", " .. (tostring(vanilla.B) .. ([[)">
-            ]] .. (tostring(version.major) .. ([[.
-            ]] .. (tostring(version.minor) .. ([[.
-            ]] .. (tostring(version.build) .. ([[.
-        </font>
-        <font size="11" color="rgb(]] .. (tostring(vanillaHalf.R) .. (", " .. (tostring(vanillaHalf.G) .. (", " .. (tostring(vanillaHalf.B) .. ([[)">
-            ]] .. (tostring(version.revision) .. [[
-        </font>
-        ]])))))))))))))))))))
+		label.Text = '<font size="8" color=\"rgb(' .. (tostring(m(vanilla.R * 255)) .. (", " .. (tostring(m(vanilla.G * 255)) .. (", " .. (tostring(m(vanilla.B * 255)) .. (')\">' .. (tostring(version.major) .. ("." .. (tostring(version.minor) .. ("." .. (tostring(version.build) .. ('</font><font size="8" color=\"rgb(' .. (tostring(m(vanillaHalf.R * 255)) .. (", " .. (tostring(m(vanillaHalf.G * 255)) .. (", " .. (tostring(m(vanillaHalf.B * 255)) .. (')\">.[' .. (tostring(version.revision) .. "]</font>")))))))))))))))))))
+		label.TextColor3 = Color3.fromRGB(255, 255, 255)
 		label.BackgroundTransparency = 1
 		label.TextXAlignment = Enum.TextXAlignment.Right
 		label.TextYAlignment = Enum.TextYAlignment.Bottom
+		label.ZIndex = 0x7FFFFFFF
+		local uiHover = UIHover.new(label, "version", tostring(version.major) .. ("." .. (tostring(version.minor) .. ("." .. (tostring(version.build) .. ("." .. tostring(version.revision)))))))
 	end
 end
 return {

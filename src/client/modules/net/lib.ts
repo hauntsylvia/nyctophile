@@ -2,14 +2,30 @@ import { APIResult } from "shared/api/api-result"
 import { Interactable } from "shared/entities/interactable"
 import { Node } from "shared/entities/node/node"
 import { Placeable } from "shared/entities/node/placeable"
+import { NyctoVersion } from "shared/entities/nycto-version"
 import { PlayerState } from "shared/entities/player/player-state"
 
 class Client
 {
     client: InternalClient
+    gameVersion: NyctoVersion
+    private EvaluateVersion(): NyctoVersion
+    {
+        let reqForV = this.client.Send<NyctoVersion>("version", "v", undefined)
+        if(reqForV !== undefined)
+        {
+            return reqForV
+        }
+        else
+        {
+            wait(2)
+            return this.EvaluateVersion()
+        }
+    }
     constructor()
     {
         this.client = new InternalClient()
+        this.gameVersion = this.EvaluateVersion()
     }
     GetMe()
     {

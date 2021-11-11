@@ -5,6 +5,7 @@ local blackCoffee = _colors.blackCoffee
 local textCoffee = _colors.textCoffee
 local textVanilla = _colors.textVanilla
 local vanilla = _colors.vanilla
+local uiFillTween = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "modules", "tweens", "tween").uiFillTween
 local ts = game:GetService("TweenService")
 local function RadToDegree(x)
 	return ((x + math.pi) / (2 * math.pi)) * 360
@@ -128,7 +129,7 @@ do
 		local fakeThis = self
 		local lastSelectedColor = Color3.fromRGB(0, 0, 0)
 		local function DefaultSetterMB1Up()
-			ts:Create(defaultSetter, TweenInfo.new(0.075, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), {
+			ts:Create(defaultSetter, uiFillTween, {
 				TextColor3 = (fakeThis.selectedColor == nil and textCoffee or textVanilla),
 				BackgroundColor3 = (fakeThis.selectedColor ~= nil and blackCoffee or vanilla),
 			}):Play()

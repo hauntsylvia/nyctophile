@@ -14,6 +14,16 @@ do
 	end
 	function Client:constructor()
 		self.client = InternalClient.new()
+		self.gameVersion = self:EvaluateVersion()
+	end
+	function Client:EvaluateVersion()
+		local reqForV = self.client:Send("version", "v", nil)
+		if reqForV ~= nil then
+			return reqForV
+		else
+			wait(2)
+			return self:EvaluateVersion()
+		end
 	end
 	function Client:GetMe()
 		local me = self.client:Send("users", "me", nil)

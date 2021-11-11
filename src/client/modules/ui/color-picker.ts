@@ -1,4 +1,5 @@
 import { blackCoffee, textCoffee, textVanilla, vanilla } from "shared/modules/colors/colors";
+import { uiFillTween } from "shared/modules/tweens/tween";
 
 const ts = game.GetService("TweenService")
 function RadToDegree(x: number)
@@ -115,7 +116,7 @@ class ColorPicker
         let lastSelectedColor: Color3 = Color3.fromRGB(0, 0, 0)
         function DefaultSetterMB1Up()
         {
-            ts.Create(defaultSetter, new TweenInfo(0.075, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), 
+            ts.Create(defaultSetter, uiFillTween, 
             {
                 TextColor3: (fakeThis.selectedColor === undefined ? textCoffee : textVanilla), 
                 BackgroundColor3: (fakeThis.selectedColor !== undefined ? blackCoffee : vanilla)

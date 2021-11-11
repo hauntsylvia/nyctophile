@@ -11,12 +11,13 @@ local textCoffee = _colors.textCoffee
 local textVanilla = _colors.textVanilla
 local vanilla = _colors.vanilla
 local BellaEnum = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "modules", "enums", "bella-enum").BellaEnum
-local uiFillTween = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "modules", "tweens", "tweens").uiFillTween
+local uiFillTween = TS.import(script, game:GetService("ReplicatedStorage"), "TS", "modules", "tweens", "tween").uiFillTween
 local BuildSystem = TS.import(script, script.Parent, "modules", "helpers", "build-system").BuildSystem
 local Draw = TS.import(script, script.Parent, "modules", "helpers", "interactable-draw").Draw
 local Client = TS.import(script, script.Parent, "modules", "net", "lib").Client
 local ColorPicker = TS.import(script, script.Parent, "modules", "ui", "color-picker").ColorPicker
 local MaterialPicker = TS.import(script, script.Parent, "modules", "ui", "material-picker").MaterialPicker
+local VersionDisplayLabel = TS.import(script, script.Parent, "modules", "ui", "version-display").VersionDisplayLabel
 local lib = Client.new()
 local plr = game:GetService("Players").LocalPlayer
 local draws = {}
@@ -33,6 +34,10 @@ buildUIScreen.Position = UDim2.fromScale(1, 0)
 local runService = game:GetService("RunService")
 local userInputService = game:GetService("UserInputService")
 local tweenService = game:GetService("TweenService")
+local function VersionDisplay()
+	local versDisplay = VersionDisplayLabel.new(lib.gameVersion)
+end
+VersionDisplay()
 local lastUIS, DrawBuildUIItems
 local function DrawBuildUICategories()
 	local fr = buildUI:WaitForChild("Screen"):WaitForChild("Categorization"):WaitForChild("InternalFrame")
